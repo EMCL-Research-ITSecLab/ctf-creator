@@ -16,10 +16,14 @@ Functions:
 - create_network(client, name, subnet_, gateway_): Creates a Docker network with IPAM configuration.
 """
 
+#!!! Have to update the docstring comments!
+
 import docker
 import docker.errors
 import docker.types
 from docker.models.networks import Network
+import subprocess
+import os
 
 
 def create_container(client,network_name, name, image,static_adress):
@@ -108,34 +112,79 @@ def create_openvpn_server(client, network_name,name, static_adress,counter,host_
     except docker.errors.APIError as e:
             print(f"Error creating container: {e}")
             raise    
-    # !!! curl the Opven VM options!
 
-def create_openvpn_config(client, user_name):
+
+# !!! Gehört fast schon in eine neue python lib 
+def curl_client_ovpn(host_address, username, counter):
+    #implement click so the first part can be changed!
+    save_directory = f"/home/nick/ctf-creator/data/{username}"
+    url = f"http://{host_address}:{80 + counter}"
+
+    try:
+        # Ensure the save directory exists; create it if not
+        os.makedirs(save_directory, exist_ok=True)
+
+        # Construct the command to download the file using curl
+        command = f"curl -o {save_directory}/client.zip {url}"
+
+        # Run the command using subprocess
+        subprocess.run(command, shell=True, check=True)
+        
+        print(f"File downloaded successfully to {save_directory}/client.zip")
+    
+    except subprocess.CalledProcessError as e:
+        print(f"Error: Failed to download file. Command returned non-zero exit status ({e.returncode})")
+    
+    except Exception as e:
+        print(f"Error: An unexpected error occurred - {e}")
+
+
+
+
+def create_openvpn_config(client, user_name, counter, host_address):
     """
     Generate a new OpenVPN configuration for the specified user.
 
     Args:
         client (docker.DockerClient): An instance of the Docker client.
         user_name (str): The name of the user for whom to create the configuration.
+        counter (int): Counter value for constructing URLs or commands.
+        host_address (str): Host address for downloading files or executing commands.
 
     Raises:
         docker.errors.NotFound: If the OpenVPN container for the user is not found.
     """
-    container_name= f"{user_name}_openvpn"
-    print("function create config", container_name)
-    try: 
-        container = client.containers.get(container_name)
-    except docker.errors.NotFound:
-        print(f"Error:Container{container_name} not found.")
-        exit(1)
-    exit_code, output = container.exec_run("./genclient.sh z")
-    print(output)
+    container_name = f"{user_name}_openvpn"
+    print(f"Creating OpenVPN configuration for {user_name}...")
 
-    # Generate new client config sucssessfully.
-    if exit_code ==0:
-        print("Generating new client config sucssessfully!")
-    else:
-        print(f"Command generating failed with exit code: {exit_code}")
+    try:
+        container = client.containers.get(container_name)
+        print(f"Container found: {container_name}")
+    except docker.errors.NotFound:
+        print(f"Error: Container {container_name} not found.")
+        exit(1)
+    except Exception as e:
+        print(f"Error: Unable to get the container. {e}")
+        exit(1)
+
+    try:
+        print("Executing command in container...")
+        exit_code, output = container.exec_run("./genclient.sh z", detach=True)
+        
+        # Assuming ./genclient.sh z generates client.ovpn in the container
+        # Replace this assumption with actual logic based on your setup
+        
+        # Example: curl client.ovpn file after generation
+        curl_client_ovpn(host_address, user_name, counter)
+
+    except Exception as e:
+        print(f"Error: Unable to execute command in container. {e}")
+        exit(1)
+
+
+
+
+
 # Need to set up split VPN
 # apk update && apk add nano
 # cd config

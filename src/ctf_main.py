@@ -1,6 +1,6 @@
-#This is still the old Version with Bugs and without SplitVPN, and saving the Dockeroptions etc.
-#The new Version will be uploaded very soon! Hopefully tomorrow
-#I had Problems with my Internet provider/ no internet @home the last 2 days and to figure that out which took much time and working at the evening without internet was not possible sadly
+# Curl etc does work now. there was a very nasty bug using python request bib so I had to change everything!
+# Have to implement split VPN and click
+# New Version very soon!
 """
 This module provides the main function of the CTF-Creator.
 To use this module, you have to provide a YAML config file.
@@ -122,7 +122,11 @@ def main():
     # Create Open VPN Server
     doc.create_openvpn_server(docker_client,network_name,user_name,f"{subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_base}.2",k, current_host)
     # Create Open VPN files
-    # doc.create_openvpn_config(docker_client,user_name)
+    doc.create_openvpn_config(docker_client,user_name,k,current_host)
+
+    # !!!  Save the OVPN Server config in these special ordner in the docker container
+    # !!! send it to the pc starting the skript
+    # !!! Save the ctf-creator/data as zip
     # Create other containers in the same network
     # Create a container for each container in the list of containers.
     for i, element in enumerate(containers):
