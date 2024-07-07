@@ -15,6 +15,32 @@ Functions:
 - extract_hosts(hosts): Extracts the host part from each string in a list of hosts.
 """
 import yaml
+import click
+
+
+
+def read_data_from_yaml(data):
+ 
+    required_fields = ['containers', 'users', 'identityFile', 'hosts', 'wireguard_config', 
+                       'subnet_first_part', 'subnet_second_part', 'subnet_third_part']
+    
+    for field in required_fields:
+        if field not in data:
+            raise ValueError(f"Missing {field} field in YAML data")
+
+    # Store containers and users in separate lists
+    containers = data.get('containers', [])
+    users = data.get('users', [])
+    key = data.get('identityFile', [])
+    hosts = data.get('hosts' ,[])
+    wireguard_config = data.get('wireguard_config' ,[])
+    #subnet_begin = data.get('subnet_begin' ,[])
+    subnet_first_part = data.get('subnet_first_part' ,[])
+    subnet_second_part = data.get('subnet_second_part' ,[])
+    subnet_third_part = data.get('subnet_third_part' ,[])
+  
+    
+    return containers, users, key, hosts, wireguard_config,subnet_first_part, subnet_second_part, subnet_third_part
 
 
 def read_yaml_data(file_path):
@@ -41,47 +67,14 @@ def read_yaml_data(file_path):
     with open(file_path, 'r') as file:
         data = yaml.safe_load(file)
     
-    # Ensure containers field is stored in a list
-    # Raise ValueError if containers field is missing in YAML data
-    if 'containers' not in data:
-        raise ValueError("Missing 'containers' field in YAML data")
-    #if not isinstance(data['containers'], list):
-        #raise ValueError("'containers' field must be a list")
     
-    # Ensure users field is stored in a list
-    # ValueError if users field is not in YAML data
-    if 'users' not in data:
-        raise ValueError("Missing 'users' field in YAML data")
-    #if not isinstance(data['users'], list):
-        #raise ValueError("'users' field must be a list")
-    # Ensure Place_of_ssh_key field is stored in a list
-    # ValueError if identityFile is not in YAML data
-    if 'identityFile' not in data:
-        raise ValueError("Missing 'identityFile' field in YAML data")
+    required_fields = ['containers', 'users', 'identityFile', 'hosts', 'wireguard_config', 
+                       'subnet_first_part', 'subnet_second_part', 'subnet_third_part']
     
-    # ValueError if hosts field is not in YAML data
-    if 'hosts' not in data:
-        raise ValueError("Missing 'hosts' field in YAML data")
-    
-    # Raised if the wireguard_config field is not in YAML data.
-    if 'wireguard_config' not in data:
-        raise ValueError("Missing 'wireguard_config' field in YAML data")
-    
-    #if 'subnet_begin' not in data:
-    #    raise ValueError("Missing 'subnet_begin' field in YAML data")
-    
-    # ValueError if subnet_first_part is not in YAML data
-    if 'subnet_first_part' not in data:
-         raise ValueError("Missing 'subnet_first_part' field in YAML data")
-    
-    # ValueError if subnet_second_part is not in YAML data
-    if 'subnet_second_part' not in data:
-         raise ValueError("Missing 'subnet_second_part' field in YAML data")
-    
-    # ValueError if subnet_third_part is not in YAML data
-    if 'subnet_third_part' not in data:
-         raise ValueError("Missing 'subnet_third_part' field in YAML data")
-    
+    for field in required_fields:
+        if field not in data:
+            raise ValueError(f"Missing {field} field in YAML data")
+
     # Store containers and users in separate lists
     containers = data.get('containers', [])
     users = data.get('users', [])
@@ -117,3 +110,45 @@ def extract_hosts(hosts):
             # Handle the case where there is no '@' symbol in the string
             extracted_hosts.append(None)
     return extracted_hosts
+
+@click.command()
+@click.option('--config', prompt='Please enter the path to your .yaml file', help='The path to the .yaml configuration file for the ctf-creator.')
+def load_config_and_read(config):
+    """Load and process the YAML configuration file for ctf-creator."""
+    try:
+        containers, users, key, hosts, wireguard_config, subnet_first_part, subnet_second_part, subnet_third_part = read_yaml_data(config)
+        click.echo('YAML file loaded successfully.')
+        # Process the YAML data as needed for the ctf-creator
+        click.echo(f"Containers: {containers}")
+        click.echo(f"Users: {users}")
+        click.echo(f"Key: {key}")
+        click.echo(f"Hosts: {hosts}")
+        click.echo(f"WireGuard Config: {wireguard_config}")
+        click.echo(f"Subnet First Part: {subnet_first_part}")
+        click.echo(f"Subnet Second Part: {subnet_second_part}")
+        click.echo(f"Subnet Third Part: {subnet_third_part}")
+        return containers, users, key, hosts, wireguard_config, subnet_first_part, subnet_second_part, subnet_third_part
+    except FileNotFoundError:
+        click.echo('Error: The specified file was not found.')
+    except yaml.YAMLError as exc:
+        click.echo(f'Error parsing YAML file: {exc}')
+    except Exception as e:
+        click.echo(f'An unexpected error occurred: {e}')
+
+@click.command()
+@click.option('--config', prompt='Please enter the path to your .yaml file', help='The path to the .yaml configuration file for the ctf-creator.')
+def load_config(config):
+    """Load and process the YAML configuration file for ctf-creator."""
+    try:
+        with open(config, 'r') as file:
+            data = yaml.safe_load(file)
+            click.echo('YAML file loaded successfully.')
+            # Process the YAML data as needed for the ctf-creator
+            #click.echo(data)
+            return data
+    except FileNotFoundError:
+        click.echo('Error: The specified file was not found.')
+    except yaml.YAMLError as exc:
+        click.echo(f'Error parsing YAML file: {exc}')
+    except Exception as e:
+        click.echo(f'An unexpected error occurred: {e}')

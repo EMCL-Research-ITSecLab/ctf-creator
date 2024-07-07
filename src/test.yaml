@@ -26,9 +26,9 @@ containers:
 # Usernames/ Uni-IDs
 users:
   - tz251
-  - mg235
-  - qd109
-  - lk543
+  #- mg235
+  #- qd109
+  #- lk543
   #- jp005
   #- jk006
   #- jl007
