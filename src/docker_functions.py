@@ -115,9 +115,9 @@ def create_openvpn_server(client, network_name,name, static_adress,counter,host_
 
 
 # !!! Gehört fast schon in eine neue python lib 
-def curl_client_ovpn(host_address, username, counter):
+def curl_client_ovpn(host_address, user_name, counter,save_path):
     #implement click so the first part can be changed!
-    save_directory = f"/home/nick/ctf-creator/data/{username}"
+    save_directory = f"{save_path}/data/{user_name}"
     url = f"http://{host_address}:{80 + counter}"
 
     try:
@@ -139,9 +139,17 @@ def curl_client_ovpn(host_address, username, counter):
         print(f"Error: An unexpected error occurred - {e}")
 
 
+### Da gibt es bestimmt irgendeine funktion um dateien mit python zu ändern.
+### cd config und dann suche alle push route. lösche die zeile oder einfache adde # davor
+## schreibe die richtige push route 
+## speichere
+## docker restart!
+## Führe die funktion vor dem speichern der aus, aber nach dem erstellen des containers!
+def create_split_vpn():
+    print()
 
-
-def create_openvpn_config(client, user_name, counter, host_address):
+###!!! change name of function so it indicsates that it saves everything too!
+def create_openvpn_config(client, user_name, counter, host_address,save_path):
     """
     Generate a new OpenVPN configuration for the specified user.
 
@@ -156,15 +164,24 @@ def create_openvpn_config(client, user_name, counter, host_address):
     """
     container_name = f"{user_name}_openvpn"
     print(f"Creating OpenVPN configuration for {user_name}...")
-
+    # Download the folder with data 
     try:
+        # FYI: Docker SDK python Docu is very poorly documented 
         container = client.containers.get(container_name)
-        print(f"Container found: {container_name}")
+        local_save_path = f"{save_path}/data/{user_name}"
+        local_path_to_data =f"{save_path}/data/{user_name}/dockovpn_data.tar"
+        os.makedirs(local_save_path, exist_ok=True)
+        archive, stat = container.get_archive("/opt/Dockovpn_data")
+        # Save the archive to a local file
+        with open(local_path_to_data, "wb") as f:
+            for chunk in archive:
+                f.write(chunk)
+        print(f"Container found: {container_name}", "And the Dockovpn_data folder is saved on the host")
     except docker.errors.NotFound:
         print(f"Error: Container {container_name} not found.")
         exit(1)
     except Exception as e:
-        print(f"Error: Unable to get the container. {e}")
+        print(f"Error: Something is wrong with the saving of the ovpn_data!. {e}")
         exit(1)
 
     try:
@@ -175,7 +192,7 @@ def create_openvpn_config(client, user_name, counter, host_address):
         # Replace this assumption with actual logic based on your setup
         
         # Example: curl client.ovpn file after generation
-        curl_client_ovpn(host_address, user_name, counter)
+        curl_client_ovpn(host_address, user_name, counter,save_path)
 
     except Exception as e:
         print(f"Error: Unable to execute command in container. {e}")
@@ -188,10 +205,11 @@ def create_openvpn_config(client, user_name, counter, host_address):
 # Need to set up split VPN
 # apk update && apk add nano
 # cd config
+# nano server conf 
 # delte or # all push lines out 
 # add push "route 10.13.13.0 255.255.255.0"
 # control x, yes safe
-# zip the data folder and send it to the host and save it in a folder named after user like OVPN Data
+# restart docker!
 
 
 def create_jump_host(client, network_name, name, static_adress,counter,host):
