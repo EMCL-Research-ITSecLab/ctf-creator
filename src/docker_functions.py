@@ -116,7 +116,7 @@ def create_openvpn_server(client, network_name,name, static_adress,counter,host_
 
 
 # !!! Gehört fast schon in eine neue python lib 
-def curl_client_ovpn_zip_version(host_address, user_name, counter,save_path):
+def curl_client_ovpn_zip_version(container,host_address, user_name, counter,save_path):
     #implement click so the first part can be changed!
     save_directory = f"{save_path}/data/{user_name}"
     url = f"http://{host_address}:{80 + counter}"
@@ -135,9 +135,18 @@ def curl_client_ovpn_zip_version(host_address, user_name, counter,save_path):
     
     except subprocess.CalledProcessError as e:
         print(f"Error: Failed to download file. Command returned non-zero exit status ({e.returncode})")
+        print("Try downloading agian! Because of the error!")
+        exit_code, output = container.exec_run("./genclient.sh z", detach=True)
+        curl_client_ovpn_zip_version(container,host_address,user_name,counter,save_path)
+
     
     except Exception as e:
         print(f"Error: An unexpected error occurred - {e}")
+        print("Try downloading agian! Because of the error!")
+        exit_code, output = container.exec_run("./genclient.sh z", detach=True)
+        curl_client_ovpn_zip_version(container,host_address,user_name,counter,save_path)
+
+
 def curl_client_ovpn_conf_version(host_address, user_name, counter,save_path):
     #implement click so the first part can be changed!
     save_directory = f"{save_path}/data/{user_name}"
@@ -321,16 +330,17 @@ def create_split_vpn(client, user_name,new_push_route, save_path):
         # Upload 
         upload_tar_to_container(container,local_path_to_data,"/opt/Dockovpn/config/")
         # apk add tar
-        exit_code, output = container.exec_run("apk add tar", detach=True)
+        exit_code, output = container.exec_run("apk add tar")
         # unpack tar file
-        exit_code, output = container.exec_run("tar -xvf /opt/Dockovpn/config/server_conf_data.tar -f", detach=True)
+        exit_code, output = container.exec_run("tar -xvf /opt/Dockovpn/config/server_conf_data.tar -f")
         # rm tar file 
         exit_code, output = container.exec_run("rm /opt/Dockovpn/config/server_conf_data.tar ", detach=True)
         #exit_code, output = container.exec_run("rm /opt/Dockovpn/config/server.conf", detach=True)
         # !!! Place the server.conf in the right place!
         #exit_code, output = container.exec_run(f"", detach=True)
         # restart docker
-        container.restart()
+        # !!! Bug on the restart so it has todo with the split VPN!
+        container.restart(timeout=0)
     except Exception as e:
         print(f"Error Creating split VPN: {e}")
     
@@ -456,7 +466,9 @@ def create_openvpn_config(client, user_name, counter, host_address,save_path,new
         # Replace this assumption with actual logic based on your setup
         
         # Example: curl client.ovpn file after generation
-        curl_client_ovpn_zip_version(host_address, user_name, counter,save_path)
+        # !!!Maybe try to curl it agian if it failes!
+        # !!! Restart the config and curl
+        curl_client_ovpn_zip_version(container,host_address, user_name, counter,save_path)
 
     except Exception as e:
         print(f"Error: Unable to execute command in container. {e}")
@@ -464,6 +476,7 @@ def create_openvpn_config(client, user_name, counter, host_address,save_path,new
 
 
 
+#!!! dockerovp tar einspielen 
 
 
 # Need to set up split VPN

@@ -30,9 +30,16 @@ users:
   - qd109
   - lk543
   - jp005
-  #- jk006
-  #- jl007
-  #- jt008
+  - jk006
+  - jl007
+  - jt008
+  - jk009
+  - jk010
+  - jk011
+  - jk012
+  - jk013
+  - jk014
+  - jk015
 
 # For SSH Connection
 # Direction of your private SSH key
