@@ -2,8 +2,12 @@
 # Click does now work
 # Saving the ovpn_data folder works now perfectly without bugs!
 # FYI the docker sdk for python is very poorly documented. 
-# Split VPN missing and clean up commetns and doc strings!
-# New Version very soon!
+# Split VPN works now without bugs!
+# Everything works now!
+# Need to throw away functions that are not needed
+# clean up code, comments and doc string 
+# New version very soon! 
+
 """
 This module provides the main function of the CTF-Creator.
 To use this module, you have to provide a YAML config file.
@@ -124,7 +128,8 @@ def main(config, save_path):
         subnet_third_part[0] = 0 
       
       subnet_base = (subnet_third_part[0]+ (k%256)) % 256
-    
+      # Calculation for Split VPN
+      new_push_route = f"{subnet_first_part[0]}.{subnet_second_part[0]}.0.0 255.255.255.0"
       subnet = f"{subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_base}.0/24"
       print("subnet", subnet)
       
@@ -144,7 +149,8 @@ def main(config, save_path):
       doc.create_openvpn_server(docker_client,network_name,user_name,f"{subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_base}.2",k, current_host)
       # Create Open VPN files
       click.echo(f"The config files will be saved here {save_path}")
-      doc.create_openvpn_config(docker_client,user_name,k,current_host,save_path)
+      doc.create_split_vpn(docker_client,user_name,new_push_route,save_path)
+      doc.create_openvpn_config(docker_client,user_name,k,current_host,save_path, new_push_route)
 
       # !!!  Save the OVPN Server config in these special ordner in the docker container
       # !!! send it to the pc starting the skript
