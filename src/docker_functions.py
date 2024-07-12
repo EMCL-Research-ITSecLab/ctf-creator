@@ -116,7 +116,7 @@ def create_openvpn_server(client, network_name,name, static_adress,counter,host_
 
 
 # !!! Gehört fast schon in eine neue python lib 
-def curl_client_ovpn_zip_version(container,host_address, user_name, counter,save_path):
+def curl_client_ovpn_zip_version(container,host_address, user_name, counter,save_path, max_retries_counter = 0, max_retries=5):
     #implement click so the first part can be changed!
     save_directory = f"{save_path}/data/{user_name}"
     url = f"http://{host_address}:{80 + counter}"
@@ -132,19 +132,27 @@ def curl_client_ovpn_zip_version(container,host_address, user_name, counter,save
         subprocess.run(command, shell=True, check=True)
         
         print(f"File downloaded successfully to {save_directory}/client.zip")
-    
-    except subprocess.CalledProcessError as e:
-        print(f"Error: Failed to download file. Command returned non-zero exit status ({e.returncode})")
-        print("Try downloading agian! Because of the error!")
-        exit_code, output = container.exec_run("./genclient.sh z", detach=True)
-        curl_client_ovpn_zip_version(container,host_address,user_name,counter,save_path)
 
-    
+    except subprocess.CalledProcessError as e:
+      print(f"Error: Failed to download file. Command returned non-zero exit status ({e.returncode})")
+
+      if max_retries_counter < max_retries:
+        print(f"Retrying download (attempt {max_retries_counter+1} of {max_retries})")
+        max_retries_counter +=1
+        curl_client_ovpn_zip_version(container, host_address, user_name, counter, save_path, max_retries_counter)
+      else:
+        print(f"Download failed after {max_retries} retries. Exiting.")
+        exit(1)
+
     except Exception as e:
-        print(f"Error: An unexpected error occurred - {e}")
-        print("Try downloading agian! Because of the error!")
-        exit_code, output = container.exec_run("./genclient.sh z", detach=True)
-        curl_client_ovpn_zip_version(container,host_address,user_name,counter,save_path)
+      print(f"Error: An unexpected error occurred - {e}")
+      if max_retries_counter < max_retries:
+        print(f"Retrying download (attempt {max_retries_counter+1} of {max_retries})")
+        max_retries_counter +=1
+        curl_client_ovpn_zip_version(container, host_address, user_name, counter, save_path, max_retries_counter)
+      else:
+        print(f"Download failed after {max_retries} retries. Exiting.")
+        exit(1)
 
 
 def curl_client_ovpn_conf_version(host_address, user_name, counter,save_path):
