@@ -12,7 +12,7 @@ import os
 
 def zip_folder(folder_path, zip_path):
     """
-    Zips all files in a folder and stores the zip file at a specified path. This is useful for zipping files that are in a different directory than the one being zipped.
+    Zips all files in a folder and stores the zip file at a specified path.
     
     Args:
         folder_path: The path to the folder to zip.

@@ -72,15 +72,17 @@ def execute_command_ssh(ssh_client, command):
         
     # Read the output of the command
     output = stdout.read().decode()
-        
-    print(stderr.read().decode())
-    # Print the output
+    error_output = stderr.read().decode()
+    
+    if error_output:
+        print("Error output:")
+        print(error_output)
     print("Output of the command:")
     print(output)
 
 def execute_python_ssh(ssh_client, python_code):
     """
-    Execute Python code on the remote machine and print the output. This is a helper function.
+    Execute Python code on the remote machine and print the output.
     
     Args:
         ssh_client: The SSH client to use for execution.
@@ -88,12 +90,16 @@ def execute_python_ssh(ssh_client, python_code):
     """
     # Execute the Python code on the remote machine
     stdin, stdout, stderr = ssh_client.exec_command(f'python3 -c "{python_code}"')
+    output = stdout.read().decode()
+    error_output = stderr.read().decode()
+    
+    if error_output:
+        print("Error output:")
+        print(error_output)
+    print("Output of the Python code:")
+    print(output)
 
-    # Print the output of the executed Python code
-    print(stdout.read().decode())
-    print(stderr.read().decode())
-
-def send_pyhton_script(ssh_client, script_path, name):
+def send_python_script(ssh_client, script_path, remote_path):
     """
     Send a Python script to a remote machine.
     
@@ -104,11 +110,7 @@ def send_pyhton_script(ssh_client, script_path, name):
     """
     # Open an SFTP session
     sftp = ssh_client.open_sftp()
-
-    # Upload the Python script to the remote machine
-    sftp.put(script_path, name)
-
-    # Close the SFTP session
+    sftp.put(script_path, remote_path)
     sftp.close()
 
 
@@ -127,8 +129,7 @@ def close_ssh_connection(ssh_client):
     else:
         print("No active SSH connection to close.")
 
-
-def bastion_command(my_network, host_ip, ip_adress ):
+def bastion_command(my_network, host_ip, ip_address):
     """
     Build and return the bastion command. This is used to run Docker on a host that is connected to an SSH server.
     
@@ -149,8 +150,8 @@ def bastion_command(my_network, host_ip, ip_adress ):
         -v $PWD/authorized_keys:/var/lib/bastion/authorized_keys:ro \
         -v bastion:/usr/etc/ssh:rw \
         --add-host docker-host:{host_ip} \
-        --network = {my_network} \
-        --ip {ip_adress} \
+        --network={my_network} \
+        --ip {ip_address} \
         -p 22222:22/tcp \
         -e "PUBKEY_AUTHENTICATION=true" \
         -e "GATEWAY_PORTS=false" \

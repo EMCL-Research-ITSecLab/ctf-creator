@@ -1,6 +1,6 @@
 import docker_functions as doc 
-import ssh_functions as ssh
-import zip_functions as zip
+#import ssh_functions as ssh
+#import zip_functions as zip
 #import docker
 #import os
 #import pyyaml_functions as yaml
