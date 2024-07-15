@@ -44,7 +44,7 @@ users:
 # For SSH Connection
 # Direction of your private SSH key
 identityFile:
-  - /home/nick/Data/ssh_key
+ 
 
 # For SSH Connection with user in Terminal
 # E.g. user@hostIPadress
