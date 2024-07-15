@@ -171,6 +171,8 @@ def create_split_vpn(client, user_name, new_push_route, save_path):
         exit_code, output = container.exec_run("rm /opt/Dockovpn/config/server_conf_data.tar ")
         # restart docker
         container.restart(timeout=0)
+        # Delay to give time to restart!
+        time.sleep(1)
     except Exception as e:
         print(f"Error Creating split VPN: {e}")
 

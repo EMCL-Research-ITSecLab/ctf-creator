@@ -29,6 +29,7 @@ import yaml
 import subprocess
 from docker.errors import NotFound
 import click
+import os
 
 # Click for reading data from the terminal 
 @click.command()
@@ -140,14 +141,19 @@ def main(config, save_path):
       # Example to create a Jump Host but it it currently not used!
       #doc.create_jump_host(docker_client,network_name,user_name,f"{subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_base}.2",k,hosts[current_vm-1])
       
-      # Create Open VPN Server
-      doc.create_openvpn_server(docker_client,network_name,user_name,f"{subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_base}.2",k, current_host)
-      # Create Open VPN files
-      click.echo(f"The config files will be saved here {save_path}")
-      doc.create_split_vpn(docker_client,user_name,new_push_route,save_path)
-      doc.create_openvpn_config(docker_client,user_name,k,current_host,save_path, new_push_route)
+      # Create Open VPN Server if save data for user is not existing!
+      local_save_path_to_user = f"{save_path}/data/{user_name}"
+      if not os.path.exists(local_save_path_to_user):
+        click.echo(f"For the user: {user_name}, an OpenVPN configuration file will be generated!")
+        doc.create_openvpn_server(docker_client,network_name,user_name,f"{subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_base}.2",k, current_host)
+        # Create Open VPN files
+        click.echo(f"The config files will be saved here {save_path}")
+        doc.create_split_vpn(docker_client,user_name,new_push_route,save_path)
+        doc.create_openvpn_config(docker_client,user_name,k,current_host,save_path, new_push_route)
+      else:
+        click.echo(f"OpenVPN data exists for the user: {user_name}")
+        click.echo(f"Data for the user: {user_name} will NOT be changed, and no OpenVPN server for the user will be started")
 
-      # Create other containers in the same network
       # Create a container for each container in the list of containers.
       for i, element in enumerate(containers):
         container_name = element.split(':')[0]
