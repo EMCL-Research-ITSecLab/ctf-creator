@@ -40,7 +40,7 @@ users:
   - jk013
   - jk014
   - jk015
-
+  - new16
 # For SSH Connection
 # Direction of your private SSH key
 identityFile:
