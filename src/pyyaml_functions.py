@@ -30,7 +30,6 @@ def read_data_from_yaml(data):
             - users (list): List of users.
             - key (str): Path to the private SSH key for host login.
             - hosts (list): List of hosts where the Docker containers are running.
-            - wireguard_config (str): Name of the WireGuard configuration.
             - subnet_first_part (str): IP address, formatted as firstpart.xx.xx.xx/24.
             - subnet_second_part (str): IP address, formatted as xx.second_part.xx.xx/24.
             - subnet_third_part (str): IP address, formatted as xx.xx.third_part.xx/24.
@@ -38,7 +37,7 @@ def read_data_from_yaml(data):
     Raises:
         ValueError: If any of the required fields are missing in the YAML data.
     """
-    required_fields = ['containers', 'users', 'identityFile', 'hosts', 'wireguard_config', 
+    required_fields = ['containers', 'users', 'identityFile', 'hosts', 
                        'subnet_first_part', 'subnet_second_part', 'subnet_third_part']
     
     for field in required_fields:
@@ -50,12 +49,11 @@ def read_data_from_yaml(data):
     users = data.get('users', [])
     key = data.get('identityFile', [])
     hosts = data.get('hosts', [])
-    wireguard_config = data.get('wireguard_config', [])
     subnet_first_part = data.get('subnet_first_part', [])
     subnet_second_part = data.get('subnet_second_part', [])
     subnet_third_part = data.get('subnet_third_part', [])
     
-    return containers, users, key, hosts, wireguard_config, subnet_first_part, subnet_second_part, subnet_third_part
+    return containers, users, key, hosts, subnet_first_part, subnet_second_part, subnet_third_part
 
 # Currently not used function because of Python click
 def read_yaml_data(file_path):
@@ -71,7 +69,6 @@ def read_yaml_data(file_path):
             - users (list): List of users.
             - key (str): Path to the private SSH key for host login.
             - hosts (list): List of hosts where the Docker containers are running.
-            - wireguard_config (str): Name of the WireGuard configuration.
             - subnet_first_part (str): IP address, formatted as firstpart.xx.xx.xx/24.
             - subnet_second_part (str): IP address, formatted as xx.second_part.xx.xx/24.
             - subnet_third_part (str): IP address, formatted as xx.xx.third_part.xx/24.

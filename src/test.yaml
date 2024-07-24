@@ -11,7 +11,6 @@
 #  - subnet_first_part: IP address, formatted as firstpart.xx.xx.xx/24.
 #  - subnet_second_part: IP address, formatted as xx.second_part.xx.xx/24.
 #  - subnet_third_part: IP address, formatted as xx.xx.third_part.xx/24.
-#  - wireguard_config: Name of your WireGuard config needed to connect to the hosts.
 #
 ######################################################################################
 
@@ -29,22 +28,23 @@ users:
   - mg235
   - qd109
   - lk543
-  - jp005
-  - jk006
-  - jl007
-  - jt008
-  - jk009
-  - jk010
-  - jk011
-  - jk012
-  - jk013
-  - jk014
-  - jk015
-  - new16
+ # - jp005
+ # - jk006
+ # - jl007
+ # - jt008
+ # - jk009
+ # - jk010
+ # - jk011
+ # - jk012
+ # - jk013
+ # - jk014
+ # - jk015
+ # - new16
+ # - new17
 # For SSH Connection
 # Direction of your private SSH key
 identityFile:
- 
+ - /home/nick/Data/ssh_key
 
 # For SSH Connection with user in Terminal
 # E.g. user@hostIPadress
@@ -67,7 +67,3 @@ subnet_second_part:
 # E.g. 0 if IP Adress is 10.13.0.0/24
 subnet_third_part:
  - 0
-
-wireguard_config:
- #- wg0
- - peer

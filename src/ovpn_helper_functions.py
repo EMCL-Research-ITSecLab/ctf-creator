@@ -1,6 +1,7 @@
 
 import subprocess
 import os
+import time
 
 def curl_client_ovpn_zip_version(container, host_address, user_name, counter, save_path, max_retries_counter=0, max_retries=10):
   """
@@ -16,6 +17,7 @@ def curl_client_ovpn_zip_version(container, host_address, user_name, counter, sa
     max_retries (int, optional): Maximum number of retry attempts.
   """
   save_directory = f"{save_path}/data/{user_name}"
+  #!!! Was passiert, wenn ich über Portnr hochzähle
   url = f"http://{host_address}:{80 + counter}"
 
   try:
@@ -36,6 +38,8 @@ def curl_client_ovpn_zip_version(container, host_address, user_name, counter, sa
     if max_retries_counter < max_retries:
       print(f"Retrying download (attempt {max_retries_counter+1} of {max_retries})")
       max_retries_counter +=1
+      exit_code, output = container.exec_run("./genclient.sh z", detach=True)
+      time.sleep(2)
       curl_client_ovpn_zip_version(container, host_address, user_name, counter, save_path, max_retries_counter)
     else:
       print(f"Download failed after {max_retries} retries. Exiting.")
@@ -46,6 +50,8 @@ def curl_client_ovpn_zip_version(container, host_address, user_name, counter, sa
     if max_retries_counter < max_retries:
       print(f"Retrying download (attempt {max_retries_counter+1} of {max_retries})")
       max_retries_counter +=1
+      exit_code, output = container.exec_run("./genclient.sh z", detach=True)
+      time.sleep(2)
       curl_client_ovpn_zip_version(container, host_address, user_name, counter, save_path, max_retries_counter)
     else:
       print(f"Download failed after {max_retries} retries. Exiting. There might be a problem with the host")

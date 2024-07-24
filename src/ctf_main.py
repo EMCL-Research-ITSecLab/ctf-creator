@@ -11,7 +11,6 @@ Arguments for the YAML file:
   - subnet_first_part: IP address, formatted as first_part.xx.xx.xx/24.
   - subnet_second_part: IP address, formatted as xx.second_part.xx.xx/24.
   - subnet_third_part: IP address, formatted as xx.xx.third_part.xx/24.
-  - wireguard_config: Name of your WireGuard configuration needed to connect to the hosts.
 
 Functions:
   - main(): Main function of the CTF-Creator
@@ -56,12 +55,11 @@ def main(config, save_path):
       data = yaml.safe_load(file)
       click.echo('YAML file loaded successfully.')
     # Process the YAML data as needed for the CTF-Creator
-      containers,users,key,hosts,wireguard_config,subnet_first_part,subnet_second_part,subnet_third_part  = yaml_func.read_data_from_yaml(data)
+      containers,users,key,hosts,subnet_first_part,subnet_second_part,subnet_third_part  = yaml_func.read_data_from_yaml(data)
       click.echo(f"Containers: {containers}")
       click.echo(f"Users: {users}")
       click.echo(f"Key: {key}")
       click.echo(f"Hosts: {hosts}")
-      click.echo(f"WireGuard Config: {wireguard_config}")
       click.echo(f"IP-Address Subnet-base: {subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_third_part[0]}")
    
 
@@ -78,7 +76,6 @@ def main(config, save_path):
 
     # Define ssh-agent commands as a list
     commands = [
-      f'sudo wg-quick up {wireguard_config[0]}',
       'eval `ssh-agent`',
       f'ssh-add {key[0]}'
     ]
@@ -148,11 +145,17 @@ def main(config, save_path):
         doc.create_openvpn_server(docker_client,network_name,user_name,f"{subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_base}.2",k, current_host)
         # Create Open VPN files
         click.echo(f"The config files will be saved here {save_path}")
+        #!!! Bug in create split VPN test it does not chang the other server conf it a different folder!
+        ### !!! Readme file neben client.zip how to use it maybe?
         doc.create_split_vpn(docker_client,user_name,new_push_route,save_path)
         doc.create_openvpn_config(docker_client,user_name,k,current_host,save_path, new_push_route)
       else:
         click.echo(f"OpenVPN data exists for the user: {user_name}")
-        click.echo(f"Data for the user: {user_name} will NOT be changed, and no OpenVPN server for the user will be started")
+        click.echo(f"Data for the user: {user_name} will NOT be changed. Starting OVPN Docker container with existing data")
+        # !!! Start the docker container. and push the old configs to the right place and then docker restart. 
+        # skip the curl function!
+        # 
+        click.echo(f"For {user_name } the OVPN Docker container is running and can be connected with the the existing data")
 
       # Create a container for each container in the list of containers.
       for i, element in enumerate(containers):

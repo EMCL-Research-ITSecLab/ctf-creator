@@ -217,7 +217,7 @@ def create_openvpn_config(client, user_name, counter, host_address, save_path, n
         print("Executing command in container...")
         exit_code, output = container.exec_run("./genclient.sh z", detach=True)
         # Delay to give time to run the command in the container
-        time.sleep(2)
+        time.sleep(3)
         ovpn_func.curl_client_ovpn_zip_version(container,host_address, user_name, counter,save_path)
 
     except Exception as e:
