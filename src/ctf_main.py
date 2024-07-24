@@ -76,7 +76,8 @@ def main(config, save_path):
 
     # Define ssh-agent commands as a list
     commands = [
-      'eval `ssh-agent`',
+      'eval "$(ssh-agent -s)"',
+      #'eval `ssh-agent`',
       f'ssh-add {key[0]}'
     ]
 
