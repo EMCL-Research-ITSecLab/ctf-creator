@@ -76,7 +76,7 @@ def main(config, save_path):
 
     # Define ssh-agent commands as a list
     commands = [
-      'eval "$(ssh-agent -s)"',
+      f'eval "$(ssh-agent -s)" ',
       #'eval `ssh-agent`',
       f'ssh-add {key[0]}'
     ]
@@ -153,6 +153,7 @@ def main(config, save_path):
       else:
         click.echo(f"OpenVPN data exists for the user: {user_name}")
         click.echo(f"Data for the user: {user_name} will NOT be changed. Starting OVPN Docker container with existing data")
+        doc.create_openvpn_server(docker_client,network_name,user_name,f"{subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_base}.2",k, current_host)
         # !!! Start the docker container. and push the old configs to the right place and then docker restart. 
         # skip the curl function!
         # 
