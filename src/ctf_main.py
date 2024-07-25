@@ -76,14 +76,40 @@ def main(config, save_path):
 
     # Define ssh-agent commands as a list
     commands = [
-      f'eval "$(ssh-agent -s)" ',
-      #'eval `ssh-agent`',
+      f'eval "$(ssh-agent)" ',
       f'ssh-add {key[0]}'
     ]
+    # commands = [# Check if ssh-agent is running, start if not
+    #     f'if ! pgrep -u "$USER" ssh-agent > /dev/null; then eval "$(ssh-agent -s)" fi if [ -z "$SSH_AUTH_SOCK" ]; then eval "$(ssh-agent -s)" ssh-add {key[0]} fi' ]
+    
+    # Run all commands in the list of commands
+    # commands = [f'''
+    #   if ! pgrep -u "$USER" ssh-agent > /dev/null; then
+    #       eval "$(ssh-agent -s)";
+    #   fi;
+    #   if [ -z "$SSH_AUTH_SOCK" ]; then
+    #       eval "$(ssh-agent -s)";
+    #       ssh-add {key[0]};
+    #   fi
+    #   ''']
+    # for command in commands:
+    #   subprocess.run(command, shell=True)
+    # commands = [f'''
+    #   if ! pgrep -u "$USER" ssh-agent > /dev/null; then
+    #       eval "$(ssh-agent -s)";
+    #   fi;
+    #   if [ -z "$SSH_AUTH_SOCK" ]; then
+    #       eval "$(ssh-agent -s)";
+    #   fi;
+    #   ssh-add {key[0]};
+    #   ''']
 
     # Run all commands in the list of commands
     for command in commands:
-      subprocess.run(command, shell=True)
+        result = subprocess.run(command, shell=True, executable="/bin/bash")
+        if result.returncode != 0:
+            print(f"Error executing command: {command}")
+            break
 
     # Terminal knows now the SSH-key
     

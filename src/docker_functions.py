@@ -180,6 +180,7 @@ def upload_existing_openvpn_config():
     print("!!!dummy")
     ### !!!
 
+### !!! Create a read me in the user folder!
 def create_openvpn_config(client, user_name, counter, host_address, save_path, new_push_route):
     """
     Generate a new OpenVPN configuration for the specified user.
