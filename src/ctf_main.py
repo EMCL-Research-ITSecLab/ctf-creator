@@ -117,6 +117,7 @@ def main(config, save_path):
     # Initialize Docker client using the SSH connection
     # Remove all containers from the hosts
     click.echo("Start to clean up the Hosts. Deletes old Docker-containers and networks")
+    #!!! Does not give an error warning if the ssh connection fails due to not being in the rigt wireguard vpn
     for host in hosts:
       docker_client =  docker.DockerClient(base_url=f"ssh://{host}")
       docker_client.containers.prune()

@@ -1,4 +1,16 @@
-usecase beschreiben 
+# NEW
+
+in client.ovpn 
+
+need to change this lines:
+# !!! pass auf, dass due port number auch richtig ist!
+remote 10.20.30.102 1195
+route-nopull
+route 10.13.1.0 255.255.255.0
+
+
+
+secase beschreiben 
 
 moscow prioriserung
 
