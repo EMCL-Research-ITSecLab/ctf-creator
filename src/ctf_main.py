@@ -29,6 +29,7 @@ import subprocess
 from docker.errors import NotFound
 import click
 import os
+import ovpn_helper_functions as ovpn_func
 
 # Click for reading data from the terminal 
 @click.command()
@@ -79,31 +80,7 @@ def main(config, save_path):
       f'eval "$(ssh-agent)" ',
       f'ssh-add {key[0]}'
     ]
-    # commands = [# Check if ssh-agent is running, start if not
-    #     f'if ! pgrep -u "$USER" ssh-agent > /dev/null; then eval "$(ssh-agent -s)" fi if [ -z "$SSH_AUTH_SOCK" ]; then eval "$(ssh-agent -s)" ssh-add {key[0]} fi' ]
-    
-    # Run all commands in the list of commands
-    # commands = [f'''
-    #   if ! pgrep -u "$USER" ssh-agent > /dev/null; then
-    #       eval "$(ssh-agent -s)";
-    #   fi;
-    #   if [ -z "$SSH_AUTH_SOCK" ]; then
-    #       eval "$(ssh-agent -s)";
-    #       ssh-add {key[0]};
-    #   fi
-    #   ''']
-    # for command in commands:
-    #   subprocess.run(command, shell=True)
-    # commands = [f'''
-    #   if ! pgrep -u "$USER" ssh-agent > /dev/null; then
-    #       eval "$(ssh-agent -s)";
-    #   fi;
-    #   if [ -z "$SSH_AUTH_SOCK" ]; then
-    #       eval "$(ssh-agent -s)";
-    #   fi;
-    #   ssh-add {key[0]};
-    #   ''']
-
+   
     # Run all commands in the list of commands
     for command in commands:
         result = subprocess.run(command, shell=True, executable="/bin/bash")
@@ -175,8 +152,9 @@ def main(config, save_path):
         click.echo(f"The config files will be saved here {save_path}")
         #!!! Bug in create split VPN test it does not chang the other server conf it a different folder!
         ### !!! Readme file neben client.zip how to use it maybe?
-        doc.create_split_vpn(docker_client,user_name,new_push_route,save_path)
+        doc.create_split_vpn(docker_client,user_name,new_push_route,save_path,k)
         doc.create_openvpn_config(docker_client,user_name,k,current_host,save_path, new_push_route)
+        ovpn_func.modify_ovpn_file(f"{save_path}/data/{user_name}/client.ovpn",1194+k,new_push_route)
       else:
         click.echo(f"OpenVPN data exists for the user: {user_name}")
         click.echo(f"Data for the user: {user_name} will NOT be changed. Starting OVPN Docker container with existing data")

@@ -129,7 +129,7 @@ def upload_tar_to_container(container, local_path_to_data, container_folder_path
     except FileNotFoundError:
         print(f"Error: File '{local_path_to_data}' not found.")
 
-def create_split_vpn(client, user_name, new_push_route, save_path):
+def create_split_vpn(client, user_name, new_push_route, save_path,counter):
     """
     Create a split VPN for a specified user by modifying the server.conf and restarting the OpenVPN container.
 
@@ -220,10 +220,10 @@ def create_openvpn_config(client, user_name, counter, host_address, save_path, n
 
     try:
         print("Executing command in container...")
-        exit_code, output = container.exec_run("./genclient.sh z", detach=True)
+        exit_code, output = container.exec_run("./genclient.sh", detach=True)
         # Delay to give time to run the command in the container
         time.sleep(3)
-        ovpn_func.curl_client_ovpn_zip_version(container,host_address, user_name, counter,save_path)
+        ovpn_func.curl_client_ovpn_file_version(container,host_address, user_name, counter,save_path)
 
     except Exception as e:
         print(f"Error: Unable to execute command in container. {e}")
