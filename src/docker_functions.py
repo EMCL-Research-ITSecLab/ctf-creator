@@ -172,7 +172,7 @@ def create_split_vpn(client, user_name, new_push_route, save_path,counter):
         # restart docker
         container.restart(timeout=0)
         # Delay to give time to restart!
-        time.sleep(1)
+        time.sleep(2)
     except Exception as e:
         print(f"Error Creating split VPN: {e}")
 
@@ -222,7 +222,7 @@ def create_openvpn_config(client, user_name, counter, host_address, save_path, n
         print("Executing command in container...")
         exit_code, output = container.exec_run("./genclient.sh", detach=True)
         # Delay to give time to run the command in the container
-        time.sleep(3)
+        time.sleep(4)
         ovpn_func.curl_client_ovpn_file_version(container,host_address, user_name, counter,save_path)
 
     except Exception as e:

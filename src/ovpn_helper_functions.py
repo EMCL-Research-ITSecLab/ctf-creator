@@ -91,6 +91,7 @@ def curl_client_ovpn_file_version(container, host_address, user_name, counter, s
     if max_retries_counter < max_retries:
       print(f"Retrying download (attempt {max_retries_counter+1} of {max_retries})")
       max_retries_counter +=1
+      time.sleep(3)
       curl_client_ovpn_file_version(container, host_address, user_name, counter, save_path, max_retries_counter)
     else:
       print(f"Download failed after {max_retries} retries. Exiting.")
@@ -101,6 +102,7 @@ def curl_client_ovpn_file_version(container, host_address, user_name, counter, s
     if max_retries_counter < max_retries:
       print(f"Retrying download (attempt {max_retries_counter+1} of {max_retries})")
       max_retries_counter +=1
+      time.sleep(3)
       curl_client_ovpn_file_version(container, host_address, user_name, counter, save_path, max_retries_counter)
     else:
       print(f"Download failed after {max_retries} retries. Exiting. There might be a problem with the host")
@@ -172,7 +174,7 @@ def modify_ovpn_file(file_path, new_port, new_route_ip):
 
           modified_lines.append(line)
           modified_lines.append("route-nopull\n")
-          modified_lines.append(f"route {new_route_ip} 255.255.255.0\n")
+          modified_lines.append(f"route {new_route_ip}\n")
       else:
           modified_lines.append(line)
 

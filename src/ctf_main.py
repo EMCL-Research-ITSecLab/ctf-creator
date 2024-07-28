@@ -30,6 +30,8 @@ from docker.errors import NotFound
 import click
 import os
 import ovpn_helper_functions as ovpn_func
+import readme_functions as readme
+import time
 
 # Click for reading data from the terminal 
 @click.command()
@@ -128,7 +130,7 @@ def main(config, save_path):
       
       subnet_base = (subnet_third_part[0]+ (k%256)) % 256
       # Calculation for Split VPN
-      new_push_route = f"{subnet_first_part[0]}.{subnet_second_part[0]}.0.0 255.255.255.0"
+      new_push_route = f"{subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_base}.0 255.255.255.0"
       subnet = f"{subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_base}.0/24"
       click.echo(f"Created Subnet: {subnet}")
       gateway = f"{subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_base}.1"
@@ -151,16 +153,18 @@ def main(config, save_path):
         # Create Open VPN files
         click.echo(f"The config files will be saved here {save_path}")
         #!!! Bug in create split VPN test it does not chang the other server conf it a different folder!
-        ### !!! Readme file neben client.zip how to use it maybe?
+        #!!! Change name to create split vpn on host machines?
         doc.create_split_vpn(docker_client,user_name,new_push_route,save_path,k)
         doc.create_openvpn_config(docker_client,user_name,k,current_host,save_path, new_push_route)
+        # Modifies client.ovpn file to configure spilt VPN for the user.
         ovpn_func.modify_ovpn_file(f"{save_path}/data/{user_name}/client.ovpn",1194+k,new_push_route)
+        readme.write_readme_for_ovpn_connection(local_save_path_to_user,f"{subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_base}",containers)
       else:
         click.echo(f"OpenVPN data exists for the user: {user_name}")
         click.echo(f"Data for the user: {user_name} will NOT be changed. Starting OVPN Docker container with existing data")
         doc.create_openvpn_server(docker_client,network_name,user_name,f"{subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_base}.2",k, current_host)
         # !!! Start the docker container. and push the old configs to the right place and then docker restart. 
-        # skip the curl function!
+        # s
         # 
         click.echo(f"For {user_name } the OVPN Docker container is running and can be connected with the the existing data")
 
