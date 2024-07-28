@@ -129,7 +129,12 @@ def upload_tar_to_container(container, local_path_to_data, container_folder_path
     except FileNotFoundError:
         print(f"Error: File '{local_path_to_data}' not found.")
 
-def create_split_vpn(client, user_name, new_push_route, save_path,counter):
+def download_tar_from_container():
+    print("dummy")
+    #!!! not done copy code part from create split vpn on host and use it there 
+    #!!! and download in te create split vpn on host the config folder too!
+
+def create_split_vpn_on_host(client, user_name, new_push_route, save_path,counter):
     """
     Create a split VPN for a specified user by modifying the server.conf and restarting the OpenVPN container.
 
@@ -176,11 +181,14 @@ def create_split_vpn(client, user_name, new_push_route, save_path,counter):
     except Exception as e:
         print(f"Error Creating split VPN: {e}")
 
-def upload_existing_openvpn_config():
-    print("!!!dummy")
-    ### !!!
+### !!! not finished
+## !!! uploiad the config folder and the data folder and replace them with teh existing data then it should work to reconante it with the old data!
+def upload_existing_openvpn_config(client, user_name):
+    container_name = f"{user_name}_openvpn"
+    print(f"Creating Split VPN for {user_name}...")
+    container = client.containers.get(container_name)
+    
 
-### !!! Create a read me in the user folder!
 def create_openvpn_config(client, user_name, counter, host_address, save_path, new_push_route):
     """
     Generate a new OpenVPN configuration for the specified user.

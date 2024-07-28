@@ -153,8 +153,7 @@ def main(config, save_path):
         # Create Open VPN files
         click.echo(f"The config files will be saved here {save_path}")
         #!!! Bug in create split VPN test it does not chang the other server conf it a different folder!
-        #!!! Change name to create split vpn on host machines?
-        doc.create_split_vpn(docker_client,user_name,new_push_route,save_path,k)
+        doc.create_split_vpn_on_host(docker_client,user_name,new_push_route,save_path,k)
         doc.create_openvpn_config(docker_client,user_name,k,current_host,save_path, new_push_route)
         # Modifies client.ovpn file to configure spilt VPN for the user.
         ovpn_func.modify_ovpn_file(f"{save_path}/data/{user_name}/client.ovpn",1194+k,new_push_route)
