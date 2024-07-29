@@ -32,6 +32,7 @@ import os
 import ovpn_helper_functions as ovpn_func
 import readme_functions as readme
 import time
+import hosts_functions as hosts_func
 
 # Click for reading data from the terminal 
 @click.command()
@@ -65,7 +66,7 @@ def main(config, save_path):
       click.echo(f"Hosts: {hosts}")
       click.echo(f"IP-Address Subnet-base: {subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_third_part[0]}")
    
-
+    
     number_of_vm = len(hosts)
     count_users = len(users)
     number_users_per_vm = count_users // number_of_vm
@@ -76,6 +77,9 @@ def main(config, save_path):
     click.echo(f"Number of remaining users to be distributed uniformly: {number_rest_users}")
     # Extract Host Ip-Address from yaml file
     extracted_hosts = yaml_func.extract_hosts(hosts)
+
+    hosts_func.check_host_reachability_with_ping(extracted_hosts)
+    hosts_func.check_host_reachability_with_SSH(hosts)
 
     # Define ssh-agent commands as a list
     commands = [

@@ -8,7 +8,8 @@ remote 10.20.30.102 1195
 route-nopull
 route 10.13.1.0 255.255.255.0
 
-
+!!! NEW
+Write a test where you connect to the OVPN file and check with ping the reachalbe hostes defined in the readme!
 
 secase beschreiben 
 
