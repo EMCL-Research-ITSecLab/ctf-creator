@@ -154,6 +154,7 @@ def create_split_vpn_on_host(client, user_name, new_push_route, save_path,counte
         local_save_path = f"{save_path}/data/{user_name}/server_conf"
         local_path_to_data = f"{save_path}/data/{user_name}/server_conf/server_conf_data.tar"
         os.makedirs(local_save_path, exist_ok=True)
+        # !!! If you export this code snippet for the download to a function you get a very weird bug that the folder isnt existing etc.. So I left it this way
         archive, stat = container.get_archive("/opt/Dockovpn/config/server.conf")
         # Save the archive to a local file
         with open(local_path_to_data, "wb") as f:
@@ -181,13 +182,38 @@ def create_split_vpn_on_host(client, user_name, new_push_route, save_path,counte
     except Exception as e:
         print(f"Error Creating split VPN: {e}")
 
-### !!! not finished
-## !!! uploiad the config folder and the data folder and replace them with teh existing data then it should work to reconante it with the old data!
-def upload_existing_openvpn_config(client, user_name):
-    container_name = f"{user_name}_openvpn"
-    print(f"Creating Split VPN for {user_name}...")
-    container = client.containers.get(container_name)
-    
+
+def upload_existing_openvpn_config(client, save_path, user_name):
+    try:
+        print("Now uploading old openvpn configs!")
+        container_name = f"{user_name}_openvpn"
+        print(f"Creating Split VPN for {user_name}...")
+        container = client.containers.get(container_name)
+        exit_code, output = container.exec_run("rm -r /opt/Dockopvn_data")
+        time.sleep(2)
+        upload_tar_to_container(container,f"{save_path}/data/{user_name}/server_conf/server_conf_data.tar","/opt/Dockovpn/config/")
+        upload_tar_to_container(container, f"{save_path}/data/{user_name}/dockovpn_data.tar","/opt/")
+        # apk add tar
+        # exit_code, output = container.exec_run("apk add tar")
+        # unpack tar file
+        #exit_code, output = container.exec_run("tar -xvf /opt/Dockovpn/config/server_conf_data.tar -f")
+        # rm tar file 
+       # exit_code, output = container.exec_run("rm /opt/Dockovpn/config/server_conf_data.tar ")
+        # unpack tar file
+        #exit_code, output = container.exec_run("tar -xvf /opt/dockovpn_data.tar -f")
+        
+
+        print("Upload of old configs to docker container is done")
+
+        container.restart(timeout=0)
+        # Delay to give time to restart!
+        time.sleep(2)
+    except docker.errors.NotFound:
+        print(f"Error: Container {container_name} not found.")
+        exit(1)
+    except Exception as e:
+        print(f"Error: Something is wrong with uploading the existing openvpn_config. {e}")
+        exit(1)
 
 def create_openvpn_config(client, user_name, counter, host_address, save_path, new_push_route):
     """

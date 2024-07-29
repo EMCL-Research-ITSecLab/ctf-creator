@@ -163,7 +163,7 @@ def main(config, save_path):
         click.echo(f"Data for the user: {user_name} will NOT be changed. Starting OVPN Docker container with existing data")
         doc.create_openvpn_server(docker_client,network_name,user_name,f"{subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_base}.2",k, current_host)
         # !!! Start the docker container. and push the old configs to the right place and then docker restart. 
-        # s
+        doc.upload_existing_openvpn_config(docker_client,save_path,user_name)
         # 
         click.echo(f"For {user_name } the OVPN Docker container is running and can be connected with the the existing data")
       #
