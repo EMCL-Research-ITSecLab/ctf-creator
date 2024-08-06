@@ -19,7 +19,7 @@ Args:
   - config: yaml file which is specified above
   - save_path: Path where the user date gets saved
 """
-#!!! Bug need to start client.ovpn 2 times before it gets accepted? is it because of my vpn etc and wireguard? 
+# !!! Second use case permisson error bug
 # Imports
 import docker_functions as doc
 import docker
@@ -118,6 +118,8 @@ def main(config, save_path):
           print(f"Container {item.id} not found. It might have been removed already. But it is ok.")
       # Delete all docker networks
       docker_client.networks.prune()
+      # !!! do only the cleanup if the files exists or just write it is not bad or something
+      hosts_func.execute_ssh_command(host,f"sudo rm -r ctf-data" )
     click.echo("Clean up process on hosts finished!")
     
     # Start after Clean up
@@ -160,7 +162,7 @@ def main(config, save_path):
         # Create Open VPN files
         click.echo(f"The config files will be saved here {save_path}")
         #!!! Bug in create split VPN test it does not chang the other server conf it a different folder!
-        doc.create_split_vpn_on_host(docker_client,user_name,new_push_route,save_path,k)
+        #doc.create_split_vpn_on_host(docker_client,user_name,new_push_route,save_path,k)
         doc.create_openvpn_config(docker_client,user_name,k,current_host,save_path, new_push_route)
         # Modifies client.ovpn file to configure spilt VPN for the user.
         ovpn_func.modify_ovpn_file(f"{save_path}/data/{user_name}/client.ovpn",1194+k,new_push_route)
@@ -174,7 +176,8 @@ def main(config, save_path):
         #hosts_func.execute_ssh_command(hosts[current_vm-1],"mkdir download_dockovpn_data")
         #hosts_func.send_tar_file_via_ssh(f"{save_path}/data/{user_name}/dockovpn_data.tar",hosts[current_vm-1],"/home/ubuntu/download_dockovpn_data/dockovpn_data.tar")
         #hosts_func.execute_ssh_command(hosts[current_vm-1],"tar -xvf /home/ubuntu/download_dockovpn_data/dockovpn_data.tar -f")
-        hosts_func.send_and_extract_tar_via_ssh(f"{save_path}/data/{user_name}/dockovpn_data.tar",extracted_hosts_username[current_vm-1],extracted_hosts[current_vm-1],f"/home/{extracted_hosts_username[current_vm-1]}/ctf-data/{user_name}/dock_vpn_data.tar")
+        #hosts_func.execute_ssh_command(hosts[current_vm-1],f"sudo rm -r ctf-data" )
+        hosts_func.send_and_extract_tar_via_ssh_v2(f"{save_path}/data/{user_name}/dockovpn_data.tar",extracted_hosts_username[current_vm-1],extracted_hosts[current_vm-1],f"/home/{extracted_hosts_username[current_vm-1]}/ctf-data/{user_name}/dock_vpn_data.tar")
         # !!! current bug 5.08 need to change the save or remote path!!!
         doc.create_openvpn_server_with_existing_data(docker_client,network_name,user_name,f"{subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_base}.2",k, current_host,f"/home/{extracted_hosts_username[current_vm-1]}/ctf-data/{user_name}/Dockovpn_data/")
         # !!! Start the docker container. and push the old configs to the right place and then docker restart. 

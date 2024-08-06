@@ -193,3 +193,67 @@ def send_and_extract_tar_via_ssh(tar_file_path, host_username, remote_host, remo
     finally:
         # Close the SSH connection
         ssh.close()
+
+
+def send_and_extract_tar_via_ssh_v2(tar_file_path, host_username, remote_host, remote_path, remote_port=22):
+   
+    
+    # Create an SSH client
+    ssh = paramiko.SSHClient()
+    
+    # Load SSH host keys
+    ssh.load_system_host_keys()
+    
+    # Add missing host keys
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    
+    try:
+        # Connect to the remote host using SSH agent for authentication
+        print(f"Connecting to {remote_host} as {host_username}...")
+        ssh.connect(remote_host, port=remote_port, username=host_username)
+        
+        # Extract the remote directory path
+        remote_dir = os.path.dirname(remote_path)
+        
+        # Ensure the remote directory exists
+        print(f"Ensuring the remote directory {remote_dir} exists...")
+        mkdir_command = f'mkdir -p {remote_dir}'
+        stdin, stdout, stderr = ssh.exec_command(mkdir_command)
+        mkdir_error = stderr.read().decode().strip()
+        if mkdir_error:
+            raise PermissionError(f"Failed to create directory {remote_dir}: {mkdir_error}")
+        stdout.channel.recv_exit_status()  # Wait for the command to complete
+        
+        # Use SFTP to copy the tar file
+        print(f"Copying {tar_file_path} to {remote_host}:{remote_path}...")
+        sftp = ssh.open_sftp()
+        sftp.put(tar_file_path, remote_path)
+        sftp.close()
+        
+        print(f"File {tar_file_path} successfully sent to {remote_host}:{remote_path}")
+        
+        # Ensure correct permissions for the remote path and extract the tar file
+        print(f"Extracting tar file {remote_path} on {remote_host}...")
+        extract_command = f'tar -xf {remote_path} -C {remote_dir}'
+        stdin, stdout, stderr = ssh.exec_command(extract_command)
+        stdout.channel.recv_exit_status()  # Wait for the command to complete
+        
+        # Read the output and error streams
+        output = stdout.read().decode().strip()
+        error = stderr.read().decode().strip()
+        
+        # Print the output and error (if any)
+        if output:
+            print("Output:\n", output)
+        if error:
+            print("Error:\n", error)
+            raise PermissionError(f"Failed to extract tar file: {error}")
+        
+    except PermissionError as pe:
+        print(f"A permission error occurred: {pe}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        # Close the SSH connection
+        print("Closing the SSH connection...")
+        ssh.close()
