@@ -19,7 +19,7 @@ Args:
   - config: yaml file which is specified above
   - save_path: Path where the user date gets saved
 """
-
+#!!! Bug need to start client.ovpn 2 times before it gets accepted? is it because of my vpn etc and wireguard? 
 # Imports
 import docker_functions as doc
 import docker
@@ -77,15 +77,16 @@ def main(config, save_path):
     click.echo(f"Number of remaining users to be distributed uniformly: {number_rest_users}")
     # Extract Host Ip-Address from yaml file
     extracted_hosts = yaml_func.extract_hosts(hosts)
+    extracted_hosts_username=yaml_func.extract_host_usernames(hosts)
 
     hosts_func.check_host_reachability_with_ping(extracted_hosts)
-    hosts_func.check_host_reachability_with_SSH(hosts)
 
     # Define ssh-agent commands as a list
     commands = [
       f'eval "$(ssh-agent)" ',
       f'ssh-add {key[0]}'
     ]
+  
    
     # Run all commands in the list of commands
     for command in commands:
@@ -95,6 +96,8 @@ def main(config, save_path):
             break
 
     # Terminal knows now the SSH-key
+
+    hosts_func.check_host_reachability_with_SSH(hosts)
     
     # Clean up first
     # Initialize Docker client using the SSH connection
@@ -165,9 +168,17 @@ def main(config, save_path):
       else:
         click.echo(f"OpenVPN data exists for the user: {user_name}")
         click.echo(f"Data for the user: {user_name} will NOT be changed. Starting OVPN Docker container with existing data")
-        doc.create_openvpn_server(docker_client,network_name,user_name,f"{subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_base}.2",k, current_host)
+        #!!! To mount the data correctly need to send the data to the host!!! make sure it funtionkioert bugfree
+        #!!! better send a python script per ssh and start it?!
+        #!!! change the mount folder in start ovpn with old data!
+        #hosts_func.execute_ssh_command(hosts[current_vm-1],"mkdir download_dockovpn_data")
+        #hosts_func.send_tar_file_via_ssh(f"{save_path}/data/{user_name}/dockovpn_data.tar",hosts[current_vm-1],"/home/ubuntu/download_dockovpn_data/dockovpn_data.tar")
+        #hosts_func.execute_ssh_command(hosts[current_vm-1],"tar -xvf /home/ubuntu/download_dockovpn_data/dockovpn_data.tar -f")
+        hosts_func.send_and_extract_tar_via_ssh(f"{save_path}/data/{user_name}/dockovpn_data.tar",extracted_hosts_username[current_vm-1],extracted_hosts[current_vm-1],f"/home/{extracted_hosts_username[current_vm-1]}/ctf-data/{user_name}/dock_vpn_data.tar")
+        # !!! current bug 5.08 need to change the save or remote path!!!
+        doc.create_openvpn_server_with_existing_data(docker_client,network_name,user_name,f"{subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_base}.2",k, current_host,f"/home/{extracted_hosts_username[current_vm-1]}/ctf-data/{user_name}/Dockovpn_data/")
         # !!! Start the docker container. and push the old configs to the right place and then docker restart. 
-        doc.upload_existing_openvpn_config(docker_client,save_path,user_name)
+        #doc.upload_existing_openvpn_config(docker_client,save_path,user_name)
         # 
         click.echo(f"For {user_name } the OVPN Docker container is running and can be connected with the the existing data")
       #

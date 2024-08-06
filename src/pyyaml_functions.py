@@ -101,3 +101,24 @@ def extract_hosts(hosts):
             # Handle the case where there is no '@' symbol in the string
             extracted_hosts.append(None)
     return extracted_hosts
+
+
+def extract_host_usernames(hosts):
+    """
+    Extracts the username part from each string in a list of hosts.
+
+    Args:
+        hosts (list): List of host strings, each containing an '@' symbol.
+
+    Returns:
+        list: A list of extracted username parts. If a host string does not contain an '@' symbol, None is returned for that entry.
+    """
+    extracted_usernames = []
+    for host in hosts:
+        try:
+            extracted_username = host.split('@')[0]
+            extracted_usernames.append(extracted_username)
+        except IndexError:
+            # Handle the case where there is no '@' symbol in the string
+            extracted_usernames.append(None)
+    return extracted_usernames

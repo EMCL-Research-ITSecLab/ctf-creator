@@ -107,6 +107,61 @@ def create_openvpn_server(client, network_name, name, static_address, counter, h
         print(f"Error creating container: {e}")
         raise
 
+def create_openvpn_server_with_existing_data(client, network_name, name, static_address, counter, host_address, remote_path_to_mount):
+    """
+    Create an OpenVPN server container with specific configurations.
+
+    Args:
+        client (docker.DockerClient): An instance of the Docker client.
+        network_name (str): The name of the network to use.
+        name (str): The base name of the container to create.
+        static_address (str): The IPv4 address to use for the container.
+        counter (int): A counter to ensure unique port assignments.
+        host_address (str): The host address for the OpenVPN configuration.
+
+        !!!!!!!
+
+    Returns:
+        docker.models.containers.Container: The container that was created.
+
+    Raises:
+        docker.errors.APIError: If an error occurred during the creation of the container.
+    """
+  
+    endpoint_config = docker.types.EndpointConfig(
+        version='1.44',
+        ipv4_address=static_address
+    )
+    try:
+        container = client.containers.run(
+            image="alekslitvinenk/openvpn",
+            detach=True,
+            name=f"{name}_openvpn",
+            network=network_name,
+            restart_policy={"Name": "always"},
+            cap_add=["NET_ADMIN"],
+            ports={
+                '1194/udp': (1194 + counter),
+                '8080/tcp': (80 + counter)
+            },
+            environment={
+                "HOST_ADDR": f"{host_address}",
+            },
+            networking_config={
+                network_name: endpoint_config
+            },
+            volumes = [f"{remote_path_to_mount}:/opt/Dockovpn_data"]
+            
+        )
+        return container
+    except docker.errors.APIError as e:
+        print(f"Error creating container: {e}")
+        raise
+
+
+
+
+
 def upload_tar_to_container(container, local_path_to_data, container_folder_path):
     """
     Uploads a tar archive to a specific folder within a Docker container.
@@ -192,7 +247,14 @@ def upload_existing_openvpn_config(client, save_path, user_name):
         exit_code, output = container.exec_run("rm -r /opt/Dockopvn_data")
         time.sleep(2)
         upload_tar_to_container(container,f"{save_path}/data/{user_name}/server_conf/server_conf_data.tar","/opt/Dockovpn/config/")
-        upload_tar_to_container(container, f"{save_path}/data/{user_name}/dockovpn_data.tar","/opt/")
+        upload_tar_to_container(container, f"{save_path}/data/{user_name}/dockovpn_data.tar","/opt/Dockovpn_data")
+
+        exit_code, output = container.exec_run("rm -r clients/")
+        exit_code, output = container.exec_run("rm -r pki/")
+        exit_code, output = container.exec_run("rm ta.key")
+        exit_code, output = container.exec_run("cp -r /opt/Dockovpn_data/Dockopn_data  /opt/Dockovpn_data/")
+        time.sleep(1)
+        exit_code, output = container.exec_run("rm -r /opt/Dockovpn_data/Dockopn_data/")
         # apk add tar
         # exit_code, output = container.exec_run("apk add tar")
         # unpack tar file
@@ -204,10 +266,10 @@ def upload_existing_openvpn_config(client, save_path, user_name):
         
 
         print("Upload of old configs to docker container is done")
-
+        time.sleep(1)
         container.restart(timeout=0)
         # Delay to give time to restart!
-        time.sleep(2)
+        time.sleep(4)
     except docker.errors.NotFound:
         print(f"Error: Container {container_name} not found.")
         exit(1)
@@ -236,20 +298,11 @@ def create_openvpn_config(client, user_name, counter, host_address, save_path, n
     # Download the folder with data 
     try:
         container = client.containers.get(container_name)
-        local_save_path = f"{save_path}/data/{user_name}"
-        local_path_to_data =f"{save_path}/data/{user_name}/dockovpn_data.tar"
-        os.makedirs(local_save_path, exist_ok=True)
-        archive, stat = container.get_archive("/opt/Dockovpn_data")
-        # Save the archive to a local file
-        with open(local_path_to_data, "wb") as f:
-            for chunk in archive:
-                f.write(chunk)
-        print(f"Container found: {container_name}", "And the Dockovpn_data folder is saved on the host")
     except docker.errors.NotFound:
         print(f"Error: Container {container_name} not found.")
         exit(1)
     except Exception as e:
-        print(f"Error: Something is wrong with the saving of the ovpn_data!. {e}")
+        print(f"Error: Something is wrong with {container_name}. {e}")
         exit(1)
 
     try:
@@ -261,6 +314,24 @@ def create_openvpn_config(client, user_name, counter, host_address, save_path, n
 
     except Exception as e:
         print(f"Error: Unable to execute command in container. {e}")
+        exit(1)
+    try:
+        container = client.containers.get(container_name)
+        local_save_path = f"{save_path}/data/{user_name}"
+        local_path_to_data =f"{save_path}/data/{user_name}/dockovpn_data.tar"
+        os.makedirs(local_save_path, exist_ok=True)
+        archive, stat = container.get_archive("/opt/Dockovpn_data")
+        # Save the archive to a local file
+        with open(local_path_to_data, "wb") as f:
+            for chunk in archive:
+                f.write(chunk)
+        print(f"Container found: {container_name}", "And the Dockovpn_data folder is saved on the host")
+        tar_func.untar_data(local_path_to_data,local_save_path)
+    except docker.errors.NotFound:
+        print(f"Error: Container {container_name} not found.")
+        exit(1)
+    except Exception as e:
+        print(f"Error: Something is wrong with the saving of the ovpn_data!. {e}")
         exit(1)
 
 
