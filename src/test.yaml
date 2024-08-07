@@ -29,8 +29,8 @@ users:
   - qd109
   - lk543
   - jp005
-  #- jk006
-  #- jl007
+  - jk006
+  - jl007
   #- jt008
   #- jk009
   #- jk010
@@ -55,11 +55,11 @@ hosts:
   - ubuntu@10.20.30.104
 
 # IP Adress: firstpart.xx.xx.xx/24
-# E.g. 10 if IP Adress is 10.13.13.0/24
+# E.g. 10 if IP Adress is 10.13.0.0/24
 subnet_first_part:
  - 10
 # IP Adress xx.second_part.xx.xx/24
-# E.g. 13 if IP Adress is 10.13.13.0/24
+# E.g. 13 if IP Adress is 10.13.0.0/24
 subnet_second_part:
  - 13
 
