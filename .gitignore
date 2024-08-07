@@ -3,6 +3,13 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Ignore ssh_connection.py in the src directory
+src/ssh_connection.py
+
+# Ignore the for_me directory
+for_me/
+
+
 # C extensions
 *.so
 
