@@ -69,41 +69,6 @@ def check_host_reachability_with_SSH(host_infos):
     else:
         print("All SSH connections to hosts were successful.")
 
-def send_tar_file_via_ssh(tar_file_path, host_username, remote_host, remote_path, remote_port=22):
-    # Parse the user and host from the user_host variable
-    
-    # Create an SSH client
-    ssh = paramiko.SSHClient()
-    
-    # Load SSH host keys
-    ssh.load_system_host_keys()
-    
-    # Add missing host keys
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    
-    try:
-        # Connect to the remote host using SSH agent for authentication
-        ssh.connect(remote_host, port=remote_port, username=host_username)
-        
-        # Extract the remote directory path
-        remote_dir = os.path.dirname(remote_path)
-        
-        # Ensure the remote directory exists
-        stdin, stdout, stderr = ssh.exec_command(f'mkdir -p {remote_dir}')
-        stdout.channel.recv_exit_status()  # Wait for the command to complete
-        
-        # Use SFTP to copy the file
-        sftp = ssh.open_sftp()
-        sftp.put(tar_file_path, remote_path)
-        sftp.close()
-        
-        print(f"File {tar_file_path} successfully sent to {remote_host}:{remote_path}")
-        
-    except Exception as e:
-        print(f"An error occurred: {e}")
-    finally:
-        # Close the SSH connection
-        ssh.close()
 
 
 def execute_ssh_command(user_host, command, remote_port=22):
@@ -145,57 +110,8 @@ def execute_ssh_command(user_host, command, remote_port=22):
         # Close the SSH connection
         ssh.close()
 
+
 def send_and_extract_tar_via_ssh(tar_file_path, host_username, remote_host, remote_path, remote_port=22):
-    # Create an SSH client
-    ssh = paramiko.SSHClient()
-    
-    # Load SSH host keys
-    ssh.load_system_host_keys()
-    
-    # Add missing host keys
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    
-    try:
-        # Connect to the remote host using SSH agent for authentication
-        ssh.connect(remote_host, port=remote_port, username=host_username)
-        
-        # Extract the remote directory path
-        remote_dir = os.path.dirname(remote_path)
-        
-        # Ensure the remote directory exists
-        stdin, stdout, stderr = ssh.exec_command(f'sudo mkdir -p {remote_dir}')
-        stdout.channel.recv_exit_status()  # Wait for the command to complete
-        
-        # Use SFTP to copy the tar file
-        sftp = ssh.open_sftp()
-        sftp.put(tar_file_path, remote_path)
-        sftp.close()
-        
-        print(f"File {tar_file_path} successfully sent to {remote_host}:{remote_path}")
-        
-        # Extract the tar file on the remote host
-        extract_command = f'sudo tar -xf {remote_path} -C {remote_dir}'
-        stdin, stdout, stderr = ssh.exec_command(extract_command)
-        stdout.channel.recv_exit_status()  # Wait for the command to complete
-        
-        # Read the output and error streams
-        output = stdout.read().decode()
-        error = stderr.read().decode()
-        
-        # Print the output and error (if any)
-        if output:
-            print("Output:\n", output)
-        if error:
-            print("Error:\n", error)
-        
-    except Exception as e:
-        print(f"An error occurred: {e}")
-    finally:
-        # Close the SSH connection
-        ssh.close()
-
-
-def send_and_extract_tar_via_ssh_v2(tar_file_path, host_username, remote_host, remote_path, remote_port=22):
    
     
     # Create an SSH client

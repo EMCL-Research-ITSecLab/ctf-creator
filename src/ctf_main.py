@@ -126,7 +126,7 @@ def main(config, save_path):
     current_vm = 1
     current_host = extracted_hosts[current_vm-1]
     docker_client =  docker.DockerClient(base_url=f"ssh://{hosts[current_vm-1]}")
-    for k in range (len(users)): #len(users)
+    for k in range (len(users)): 
       user_name = f"user_{users[k]}"
       network_name = f"{user_name}_network"
       # This function is used to calculate the subnet base and second part of the subnet.
@@ -163,14 +163,16 @@ def main(config, save_path):
         ovpn_func.modify_ovpn_file(f"{save_path}/data/{user_name}/client.ovpn",1194+k,new_push_route)
         # Writes a readmefile which describes reachable docker containers
         readme.write_readme_for_ovpn_connection(local_save_path_to_user,f"{subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_base}",containers)
+      # Starts OpenVPN-Container with existing data in save_path
       else:
         click.echo(f"OpenVPN data exists for the user: {user_name}")
         click.echo(f"Data for the user: {user_name} will NOT be changed. Starting OVPN Docker container with existing data")
         # Send existing openvpn_data to hosts
-        hosts_func.send_and_extract_tar_via_ssh_v2(f"{save_path}/data/{user_name}/dockovpn_data.tar",extracted_hosts_username[current_vm-1],extracted_hosts[current_vm-1],f"/home/{extracted_hosts_username[current_vm-1]}/ctf-data/{user_name}/dock_vpn_data.tar")
+        hosts_func.send_and_extract_tar_via_ssh(f"{save_path}/data/{user_name}/dockovpn_data.tar",extracted_hosts_username[current_vm-1],extracted_hosts[current_vm-1],f"/home/{extracted_hosts_username[current_vm-1]}/ctf-data/{user_name}/dock_vpn_data.tar")
         # Creates Openvpn server with existing data
         doc.create_openvpn_server_with_existing_data(docker_client,network_name,user_name,f"{subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_base}.2",k, current_host,f"/home/{extracted_hosts_username[current_vm-1]}/ctf-data/{user_name}/Dockovpn_data/")
         click.echo(f"For {user_name } the OVPN Docker container is running and can be connected with the the existing data")
+      
       # Create a container for each container in the list of containers.
       for i, element in enumerate(containers):
         container_name = element.split(':')[0]
