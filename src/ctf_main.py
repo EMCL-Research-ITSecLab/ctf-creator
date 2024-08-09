@@ -169,8 +169,10 @@ def main(config, save_path):
         click.echo(f"Data for the user: {user_name} will NOT be changed. Starting OVPN Docker container with existing data")
         # Send existing openvpn_data to hosts
         hosts_func.send_and_extract_tar_via_ssh(f"{save_path}/data/{user_name}/dockovpn_data.tar",extracted_hosts_username[current_vm-1],extracted_hosts[current_vm-1],f"/home/{extracted_hosts_username[current_vm-1]}/ctf-data/{user_name}/dock_vpn_data.tar")
+        time.sleep(2)
         # Creates Openvpn server with existing data
         doc.create_openvpn_server_with_existing_data(docker_client,network_name,user_name,f"{subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_base}.2",k, current_host,f"/home/{extracted_hosts_username[current_vm-1]}/ctf-data/{user_name}/Dockovpn_data/")
+        ovpn_func.modify_ovpn_file_change_host(f"{save_path}/data/{user_name}/client.ovpn",current_host,1194+k)
         click.echo(f"For {user_name } the OVPN Docker container is running and can be connected with the the existing data")
       
       # Create a container for each container in the list of containers.
