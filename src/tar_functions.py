@@ -1,17 +1,14 @@
 """
 This module provides functions to work with tar archives. It includes functionalities 
-to extract data from a tar archive to a specified destination directory and to create 
-a tar archive from a source directory or list of files. When creating an archive, it 
-includes only the files themselves without the folder structure and handles the deletion 
-of an existing archive with the same name.
+to extract data from a tar archive to a specified destination directory. 
 
 Functions:
   - untar_data(tar_file_path, destination_dir): Extracts data from a tar archive to a specified destination directory.
-  - create_tar_archive(source_path, archive_name, compression=None): Creates a tar archive from a source directory or list of files.
 """
 
+#!!! Brauche ich diese funktion überhaupt?
+#!!! Checkde den code ob da nicht unnötig ist! Spart dir auch die tests dazu!
 # Imports
-import os
 import tarfile
 
 def untar_data(tar_file_path, destination_dir):

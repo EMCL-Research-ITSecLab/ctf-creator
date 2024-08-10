@@ -2,7 +2,6 @@ import pytest
 from src.pyyaml_functions import extract_host_usernames
 
 
-
 def test_valid_cases():
     hosts = ['user1@10.20.30.40', 'admin@192.168.1.1']
     expected = ['user1', 'admin']
