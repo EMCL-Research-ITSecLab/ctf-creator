@@ -1,0 +1,50 @@
+######################################################################################
+# Description of the YAML File:
+# To use ctf_main.py, you have to provide a YAML config file like this one.
+#
+# Arguments for the YAML file:
+#  - name: Name of the YAML config.
+#  - containers: Docker containers that get started for each user.
+#  - users: List of users.
+#  - identityFile: Path to the private SSH key for host login.
+#  - hosts: Hosts where the Docker containers are running.
+#  - subnet_first_part: IP address, formatted as firstpart.xx.xx.xx/24.
+#  - subnet_second_part: IP address, formatted as xx.second_part.xx.xx/24.
+#  - subnet_third_part: IP address, formatted as xx.xx.third_part.xx/24.
+#
+######################################################################################
+
+name: test1
+# Containername:version 
+# E.g. nginx:latest
+containers:
+  - nginx:latest
+  
+# Usernames/ Uni-IDs
+users:
+  - tz251
+
+# For SSH Connection
+# Direction of your private SSH key
+identityFile:
+ - /home/nick/Data/ssh_key
+
+# For SSH Connection with user in Terminal
+# E.g. user@hostIPadress
+hosts:
+  - ubuntu@10.20.30.101
+
+
+# IP Adress: firstpart.xx.xx.xx/24
+# E.g. 10 if IP Adress is 10.13.0.0/24
+subnet_first_part:
+ - 10
+# IP Adress xx.second_part.xx.xx/24
+# E.g. 13 if IP Adress is 10.13.0.0/24
+subnet_second_part:
+ - 13
+
+# IP Adress xx.xx.third_part.xx/24
+# E.g. 0 if IP Adress is 10.13.0.0/24
+subnet_third_part:
+ - 0

@@ -15,7 +15,8 @@ Functions:
 - extract_hosts(hosts): Extracts the host part from each string in a list of hosts.
 """
 
-import yaml
+import re
+
 
 def read_data_from_yaml(data):
     """
@@ -52,36 +53,98 @@ def read_data_from_yaml(data):
     subnet_first_part = data.get('subnet_first_part', [])
     subnet_second_part = data.get('subnet_second_part', [])
     subnet_third_part = data.get('subnet_third_part', [])
+
+    # Ensure each entry is a list
+    for field_name, field_value in [('containers', containers),
+                                    ('users', users),
+                                    ('identityFile', key),
+                                    ('hosts', hosts),
+                                    ('subnet_first_part', subnet_first_part),
+                                    ('subnet_second_part', subnet_second_part),
+                                    ('subnet_third_part', subnet_third_part)]:
+        if not isinstance(field_value, list):
+            raise ValueError(f"Expected '{field_name}' to be a list")
     
+    # Ensure lists are not empty
+    if not containers:
+        raise ValueError("Expected 'containers' to be a non-empty list")
+    if not users:
+        raise ValueError("Expected 'users' to be a non-empty list")
+    if not hosts:
+        raise ValueError("Expected 'hosts' to be a non-empty list")
+    if not key:
+        raise ValueError("Expected 'identityFile' to be a non-empty list")
+    if not subnet_first_part:
+        raise ValueError("Expected 'subnet_first_part' to be a non-empty list")
+    if not subnet_second_part:
+        raise ValueError("Expected 'subnet_second_part' to be a non-empty list")
+    if not subnet_third_part:
+        raise ValueError("Expected 'subnet_third_part' to be a non-empty list")
+
+
+
+
+
+    # Ensure subnet fields contain exactly one value and convert to integer
+    for subnet_field, subnet_value in [('subnet_first_part', subnet_first_part),
+                                       ('subnet_second_part', subnet_second_part),
+                                       ('subnet_third_part', subnet_third_part)]:
+        if len(subnet_value) != 1:
+            raise ValueError(f"Expected '{subnet_field}' to contain exactly one value")
+        
+        try:
+            subnet_value[0] = int(subnet_value[0])
+        except ValueError:
+            raise ValueError(f"Expected '{subnet_field}' to contain an integer value")
+        
+     # Ensure lists are not empty
+    if not containers:
+        raise ValueError("Expected 'containers' to be a non-empty list")
+    if not users:
+        raise ValueError("Expected 'users' to be a non-empty list")
+    if not hosts:
+        raise ValueError("Expected 'hosts' to be a non-empty list")
+    if not key:
+        raise ValueError("Expected 'identityFile' to be a non-empty list")
+
+       # Ensure each host follows the 'username@ip_address' format
+    host_pattern = re.compile(r'^[\w._-]+@\d{1,3}(?:\.\d{1,3}){3}$')
+    for host in hosts:
+        if not host_pattern.match(host):
+            raise ValueError(f"Expected 'hosts' entries to be in the format 'username@ip_address', but got '{host}'")
+
+    # Convert singular values to lists if needed
+    containers = containers if isinstance(containers, list) else [containers]
+    users = users if isinstance(users, list) else [users]
+    hosts = hosts if isinstance(hosts, list) else [hosts]
+
+    # Extract the singular values
+    subnet_first_part = subnet_first_part[0]
+    subnet_second_part = subnet_second_part[0]
+    subnet_third_part = subnet_third_part[0]
+ 
     return containers, users, key, hosts, subnet_first_part, subnet_second_part, subnet_third_part
 
-# Currently not used function because of Python click
-def read_yaml_data(file_path):
-    """
-    Reads configuration data from a YAML file and validates the required fields.
 
-    Args:
-        file_path (str): Path to the YAML file to read.
+# def extract_hosts(hosts):
+#     """
+#     Extracts the host part from each string in a list of hosts.
 
-    Returns:
-        tuple: A tuple containing the following:
-            - containers (list): List of Docker containers to be started for each user.
-            - users (list): List of users.
-            - key (str): Path to the private SSH key for host login.
-            - hosts (list): List of hosts where the Docker containers are running.
-            - subnet_first_part (str): IP address, formatted as firstpart.xx.xx.xx/24.
-            - subnet_second_part (str): IP address, formatted as xx.second_part.xx.xx/24.
-            - subnet_third_part (str): IP address, formatted as xx.xx.third_part.xx/24.
+#     Args:
+#         hosts (list): List of host strings, each containing an '@' symbol.
 
-    Raises:
-        ValueError: If any of the required fields are missing in the YAML data.
-    """
-    with open(file_path, 'r') as file:
-        data = yaml.safe_load(file)
-    
-    # Use the helper function to validate and extract data
-    return read_data_from_yaml(data)
-
+#     Returns:
+#         list: A list of extracted host parts. If a host string does not contain an '@' symbol, None is returned for that entry.
+#     """
+#     extracted_hosts = []
+#     for host in hosts:
+#         try:
+#             extracted_host = host.split('@')[1]
+#             extracted_hosts.append(extracted_host)
+#         except IndexError:
+#             # Handle the case where there is no '@' symbol in the string
+#             extracted_hosts.append(None)
+#     return extracted_hosts
 def extract_hosts(hosts):
     """
     Extracts the host part from each string in a list of hosts.
@@ -90,35 +153,71 @@ def extract_hosts(hosts):
         hosts (list): List of host strings, each containing an '@' symbol.
 
     Returns:
-        list: A list of extracted host parts. If a host string does not contain an '@' symbol, None is returned for that entry.
+        list: A list of extracted host parts. If a host string does not contain exactly one '@' symbol, raises a ValueError.
+    
+    Raises:
+        ValueError: If a string does not contain exactly one '@' symbol or is empty.
     """
     extracted_hosts = []
     for host in hosts:
-        try:
-            extracted_host = host.split('@')[1]
-            extracted_hosts.append(extracted_host)
-        except IndexError:
-            # Handle the case where there is no '@' symbol in the string
-            extracted_hosts.append(None)
+        if not host:
+            raise ValueError("Host string cannot be empty")
+        
+        parts = host.split('@')
+        if len(parts) != 2:
+            raise ValueError(f"Host string must contain exactly one '@' symbol, but got: '{host}'")
+        
+        extracted_hosts.append(parts[1])
+    
     return extracted_hosts
 
+
+# def extract_host_usernames(hosts):
+#     """
+#     Extracts the username part from each string in a list of hosts.
+
+#     Args:
+#         hosts (list): List of host strings, each containing an '@' symbol.
+
+#     Returns:
+#         list: A list of extracted username parts. If a host string does not contain an '@' symbol, None is returned for that entry.
+#     """
+#     extracted_usernames = []
+#     for host in hosts:
+#         try:
+#             extracted_username = host.split('@')[0]
+#             extracted_usernames.append(extracted_username)
+#         except IndexError:
+#             # Handle the case where there is no '@' symbol in the string
+#             extracted_usernames.append(None)
+#     return extracted_usernames
 
 def extract_host_usernames(hosts):
     """
     Extracts the username part from each string in a list of hosts.
 
     Args:
-        hosts (list): List of host strings, each containing an '@' symbol.
+        hosts (list): List of host strings, each containing exactly one '@' symbol.
 
     Returns:
-        list: A list of extracted username parts. If a host string does not contain an '@' symbol, None is returned for that entry.
+        list: A list of extracted username parts.
+
+    Raises:
+        ValueError: If a host string does not contain exactly one '@' symbol, is empty, or contains more than one '@' symbol.
     """
     extracted_usernames = []
     for host in hosts:
-        try:
-            extracted_username = host.split('@')[0]
-            extracted_usernames.append(extracted_username)
-        except IndexError:
-            # Handle the case where there is no '@' symbol in the string
-            extracted_usernames.append(None)
+        if not host:
+            raise ValueError("Empty string provided in hosts list")
+        
+        parts = host.split('@')
+        
+        if len(parts) != 2:
+            raise ValueError(f"Invalid host format: '{host}'")
+
+        extracted_username = parts[0]
+        extracted_usernames.append(extracted_username)
+
     return extracted_usernames
+
+

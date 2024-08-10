@@ -64,7 +64,7 @@ def main(config, save_path):
       click.echo(f"Users: {users}")
       click.echo(f"Key: {key}")
       click.echo(f"Hosts: {hosts}")
-      click.echo(f"IP-Address Subnet-base: {subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_third_part[0]}")
+      click.echo(f"IP-Address Subnet-base: {subnet_first_part}.{subnet_second_part}.{subnet_third_part}")
    
     
     number_of_vm = len(hosts)
@@ -80,14 +80,18 @@ def main(config, save_path):
     extracted_hosts_username=yaml_func.extract_host_usernames(hosts)
 
     hosts_func.check_host_reachability_with_ping(extracted_hosts)
-
+    # 
     # Define ssh-agent commands as a list
     commands = [
       f'eval "$(ssh-agent)" ',
-      f'ssh-add {key[0]}'
+      #f'ssh-add {key}'
     ]
-  
-   
+    
+    # Iterate over the keys and add an ssh-add command for each key
+    for k in key:
+      commands.append(f'ssh-add {k}')
+                      
+
     # Run all commands in the list of commands
     for command in commands:
         result = subprocess.run(command, shell=True, executable="/bin/bash")
@@ -131,17 +135,17 @@ def main(config, save_path):
       network_name = f"{user_name}_network"
       # This function is used to calculate the subnet base and second part of the subnet.
       # Makes sure that correct Subnet IP-addresses are created
-      if ((subnet_third_part[0] + k) // 256 > 0):
-        subnet_second_part[0] += 1
+      if ((subnet_third_part + k) // 256 > 0):
+        subnet_second_part += 1
         subnet_base =0
-        subnet_third_part[0] = 0 
+        subnet_third_part = 0 
       
-      subnet_base = (subnet_third_part[0]+ (k%256)) % 256
+      subnet_base = (subnet_third_part+ (k%256)) % 256
       # Variables for Split VPN
-      new_push_route = f"{subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_base}.0 255.255.255.0"
-      subnet = f"{subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_base}.0/24"
+      new_push_route = f"{subnet_first_part}.{subnet_second_part}.{subnet_base}.0 255.255.255.0"
+      subnet = f"{subnet_first_part}.{subnet_second_part}.{subnet_base}.0/24"
       click.echo(f"Created Subnet: {subnet}")
-      gateway = f"{subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_base}.1"
+      gateway = f"{subnet_first_part}.{subnet_second_part}.{subnet_base}.1"
 
       # Move to the next VM and distribute users evenly
       if k >= (current_vm * number_users_per_vm) + min(current_vm, number_rest_users):
@@ -154,7 +158,7 @@ def main(config, save_path):
       local_save_path_to_user = f"{save_path}/data/{user_name}"
       if not os.path.exists(local_save_path_to_user):
         click.echo(f"For the user: {user_name}, an OpenVPN configuration file will be generated!")
-        doc.create_openvpn_server(docker_client,network_name,user_name,f"{subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_base}.2",k, current_host)
+        doc.create_openvpn_server(docker_client,network_name,user_name,f"{subnet_first_part}.{subnet_second_part}.{subnet_base}.2",k, current_host)
         # Create Open VPN files
         click.echo(f"The config files will be saved here {save_path}")
         # Creates and downloads the Openvpn configs for the user
@@ -162,7 +166,7 @@ def main(config, save_path):
         # Modifies client.ovpn file to configure spilt VPN for the user.
         ovpn_func.modify_ovpn_file(f"{save_path}/data/{user_name}/client.ovpn",1194+k,new_push_route)
         # Writes a readmefile which describes reachable docker containers
-        readme.write_readme_for_ovpn_connection(local_save_path_to_user,f"{subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_base}",containers)
+        readme.write_readme_for_ovpn_connection(local_save_path_to_user,f"{subnet_first_part}.{subnet_second_part}.{subnet_base}",containers)
       # Starts OpenVPN-Container with existing data in save_path
       else:
         click.echo(f"OpenVPN data exists for the user: {user_name}")
@@ -171,14 +175,14 @@ def main(config, save_path):
         hosts_func.send_and_extract_tar_via_ssh(f"{save_path}/data/{user_name}/dockovpn_data.tar",extracted_hosts_username[current_vm-1],extracted_hosts[current_vm-1],f"/home/{extracted_hosts_username[current_vm-1]}/ctf-data/{user_name}/dock_vpn_data.tar")
         time.sleep(2)
         # Creates Openvpn server with existing data
-        doc.create_openvpn_server_with_existing_data(docker_client,network_name,user_name,f"{subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_base}.2",k, current_host,f"/home/{extracted_hosts_username[current_vm-1]}/ctf-data/{user_name}/Dockovpn_data/")
+        doc.create_openvpn_server_with_existing_data(docker_client,network_name,user_name,f"{subnet_first_part}.{subnet_second_part}.{subnet_base}.2",k, current_host,f"/home/{extracted_hosts_username[current_vm-1]}/ctf-data/{user_name}/Dockovpn_data/")
         ovpn_func.modify_ovpn_file_change_host(f"{save_path}/data/{user_name}/client.ovpn",current_host,1194+k)
         click.echo(f"For {user_name } the OVPN Docker container is running and can be connected with the the existing data")
       
       # Create a container for each container in the list of containers.
       for i, element in enumerate(containers):
         container_name = element.split(':')[0]
-        doc.create_container(docker_client,network_name,user_name + f"_{container_name}_" + f"{i}", f"{element}", f"{subnet_first_part[0]}.{subnet_second_part[0]}.{subnet_base}.{3+i}")
+        doc.create_container(docker_client,network_name,user_name + f"_{container_name}_" + f"{i}", f"{element}", f"{subnet_first_part}.{subnet_second_part}.{subnet_base}.{3+i}")
     print("Done.")
   except FileNotFoundError:
     click.echo('Error: The specified file was not found.')
