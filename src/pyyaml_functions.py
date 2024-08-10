@@ -81,10 +81,6 @@ def read_data_from_yaml(data):
     if not subnet_third_part:
         raise ValueError("Expected 'subnet_third_part' to be a non-empty list")
 
-
-
-
-
     # Ensure subnet fields contain exactly one value and convert to integer
     for subnet_field, subnet_value in [('subnet_first_part', subnet_first_part),
                                        ('subnet_second_part', subnet_second_part),
@@ -126,25 +122,6 @@ def read_data_from_yaml(data):
     return containers, users, key, hosts, subnet_first_part, subnet_second_part, subnet_third_part
 
 
-# def extract_hosts(hosts):
-#     """
-#     Extracts the host part from each string in a list of hosts.
-
-#     Args:
-#         hosts (list): List of host strings, each containing an '@' symbol.
-
-#     Returns:
-#         list: A list of extracted host parts. If a host string does not contain an '@' symbol, None is returned for that entry.
-#     """
-#     extracted_hosts = []
-#     for host in hosts:
-#         try:
-#             extracted_host = host.split('@')[1]
-#             extracted_hosts.append(extracted_host)
-#         except IndexError:
-#             # Handle the case where there is no '@' symbol in the string
-#             extracted_hosts.append(None)
-#     return extracted_hosts
 def extract_hosts(hosts):
     """
     Extracts the host part from each string in a list of hosts.
@@ -171,26 +148,6 @@ def extract_hosts(hosts):
     
     return extracted_hosts
 
-
-# def extract_host_usernames(hosts):
-#     """
-#     Extracts the username part from each string in a list of hosts.
-
-#     Args:
-#         hosts (list): List of host strings, each containing an '@' symbol.
-
-#     Returns:
-#         list: A list of extracted username parts. If a host string does not contain an '@' symbol, None is returned for that entry.
-#     """
-#     extracted_usernames = []
-#     for host in hosts:
-#         try:
-#             extracted_username = host.split('@')[0]
-#             extracted_usernames.append(extracted_username)
-#         except IndexError:
-#             # Handle the case where there is no '@' symbol in the string
-#             extracted_usernames.append(None)
-#     return extracted_usernames
 
 def extract_host_usernames(hosts):
     """
