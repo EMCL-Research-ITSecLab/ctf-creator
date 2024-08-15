@@ -21,6 +21,7 @@ containers:
   #- alpine:3.14
   #- alpine:3.14
   - nginx:latest
+  - nginx:latest
   #- nginx:latest 
 # Usernames/ Uni-IDs
 users:

@@ -33,6 +33,7 @@ import ovpn_helper_functions as ovpn_func
 import readme_functions as readme
 import time
 import hosts_functions as hosts_func
+import sys
 
 # Click for reading data from the terminal 
 @click.command()
@@ -78,8 +79,11 @@ def main(config, save_path):
     # Extract Host Ip-Address from yaml file
     extracted_hosts = yaml_func.extract_hosts(hosts)
     extracted_hosts_username=yaml_func.extract_host_usernames(hosts)
-
-    hosts_func.check_host_reachability_with_ping(extracted_hosts)
+    try:
+      hosts_func.check_host_reachability_with_ping(extracted_hosts)
+    except Exception as e:
+      click.echo(f"An error occurred: {e}")
+      
     # 
     # Define ssh-agent commands as a list
     commands = [
@@ -91,18 +95,23 @@ def main(config, save_path):
     for k in key:
       commands.append(f'ssh-add {k}')
                       
-
-    # Run all commands in the list of commands
-    for command in commands:
-        result = subprocess.run(command, shell=True, executable="/bin/bash")
-        if result.returncode != 0:
-            print(f"Error executing command: {command}")
-            break
+    try: 
+      # Run all commands in the list of commands
+      for command in commands:
+          result = subprocess.run(command, shell=True, executable="/bin/bash")
+          if result.returncode != 0:
+              print(f"Error executing command: {command}")
+              break
+    except Exception as e:
+            raise RuntimeError(f"An unexpected error occurred: {e}")
+            
 
     # Terminal knows now the SSH-key
 
-    hosts_func.check_host_reachability_with_SSH(hosts)
-    
+    try:
+      hosts_func.check_host_reachability_with_SSH(hosts)
+    except Exception as e:
+        click.echo(f"An error occurred: {e}")
     # Clean up first
     # Initialize Docker client using the SSH connection
     # Remove all containers from the hosts

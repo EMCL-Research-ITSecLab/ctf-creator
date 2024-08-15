@@ -21,7 +21,6 @@ import docker.errors
 import docker.types
 from docker.models.networks import Network
 import os
-import tar_functions as tar_func
 import ovpn_helper_functions as ovpn_func
 import time
 
@@ -196,7 +195,7 @@ def create_openvpn_config(client, user_name, counter, host_address, save_path, n
         print("Executing command in container...")
         exit_code, output = container.exec_run("./genclient.sh", detach=True)
         # Delay to give time to run the command in the container
-        time.sleep(4)
+        time.sleep(5)
         ovpn_func.curl_client_ovpn_file_version(container,host_address, user_name, counter,save_path)
 
     except Exception as e:
@@ -213,7 +212,6 @@ def create_openvpn_config(client, user_name, counter, host_address, save_path, n
             for chunk in archive:
                 f.write(chunk)
         print(f"Container found: {container_name}", "And the Dockovpn_data folder is saved on the host")
-        tar_func.untar_data(local_path_to_data,local_save_path)
     except docker.errors.NotFound:
         print(f"Error: Container {container_name} not found.")
         exit(1)
