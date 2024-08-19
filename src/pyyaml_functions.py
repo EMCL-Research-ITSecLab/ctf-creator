@@ -7,12 +7,12 @@ The main functionalities include:
 
 1. Validating required fields in the YAML configuration.
 2. Extracting and returning relevant data for setting up Docker containers.
-3. Reading a WireGuard configuration from a YAML file.
-4. Extracting host information from provided data.
+3. Extracting host parts and usernames from host strings.
 
 Functions:
-- read_yaml_data(file_path): Reads and validates configuration data from a YAML file.
+- read_data_from_yaml(data): Validates and extracts configuration data from a provided dictionary.
 - extract_hosts(hosts): Extracts the host part from each string in a list of hosts.
+- extract_host_usernames(hosts): Extracts the username part from each string in a list of hosts.
 """
 
 import re
@@ -26,17 +26,17 @@ def read_data_from_yaml(data):
         data (dict): Configuration data.
 
     Returns:
-        tuple: A tuple containing the following:
+        tuple: A tuple containing:
             - containers (list): List of Docker containers to be started for each user.
             - users (list): List of users.
             - key (str): Path to the private SSH key for host login.
             - hosts (list): List of hosts where the Docker containers are running.
-            - subnet_first_part (str): IP address, formatted as firstpart.xx.xx.xx/24.
-            - subnet_second_part (str): IP address, formatted as xx.second_part.xx.xx/24.
-            - subnet_third_part (str): IP address, formatted as xx.xx.third_part.xx/24.
+            - subnet_first_part (str): IP address segment formatted as firstpart.xx.xx.xx/24.
+            - subnet_second_part (str): IP address segment formatted as xx.second_part.xx.xx/24.
+            - subnet_third_part (str): IP address segment formatted as xx.xx.third_part.xx/24.
 
     Raises:
-        ValueError: If any of the required fields are missing in the YAML data.
+        ValueError: If any required fields are missing, not lists, or contain invalid values.
     """
     required_fields = ['containers', 'users', 'identityFile', 'hosts', 
                        'subnet_first_part', 'subnet_second_part', 'subnet_third_part']
@@ -130,8 +130,8 @@ def extract_hosts(hosts):
         hosts (list): List of host strings, each containing an '@' symbol.
 
     Returns:
-        list: A list of extracted host parts. If a host string does not contain exactly one '@' symbol, raises a ValueError.
-    
+        list: A list of extracted host parts.
+
     Raises:
         ValueError: If a string does not contain exactly one '@' symbol or is empty.
     """
@@ -160,7 +160,7 @@ def extract_host_usernames(hosts):
         list: A list of extracted username parts.
 
     Raises:
-        ValueError: If a host string does not contain exactly one '@' symbol, is empty, or contains more than one '@' symbol.
+        ValueError: If a host string does not contain exactly one '@' symbol or is empty.
     """
     extracted_usernames = []
     for host in hosts:

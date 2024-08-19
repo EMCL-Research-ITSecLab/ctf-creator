@@ -1,26 +1,31 @@
 """
-This module provides the main function of the CTF-Creator.
-To use this module, you need to provide a YAML configuration file.
+This module provides the main functionality for the CTF-Creator tool.
+
+To use this module, you need to provide a YAML configuration file with the following structure:
 
 Arguments for the YAML file:
   - name: Name of the YAML configuration.
-  - containers: Docker containers that get started for each user.
-  - users: List of users.
+  - containers: Docker containers to be started for each user.
+  - users: List of users to be managed.
   - identityFile: Path to the private SSH key for host login.
-  - hosts: Hosts where the Docker containers are running.
+  - hosts: List of hosts where the Docker containers are running.
   - subnet_first_part: IP address, formatted as first_part.xx.xx.xx/24.
   - subnet_second_part: IP address, formatted as xx.second_part.xx.xx/24.
   - subnet_third_part: IP address, formatted as xx.xx.third_part.xx/24.
 
 Functions:
-  - main(): Main function of the CTF-Creator
+  - main(): Main function of the CTF-Creator, which performs the following tasks:
+    1. Connects using SSH keys specified in the YAML file.
+    2. Cleans up existing Docker containers and networks on the specified hosts.
+    3. Creates Docker networks and OpenVPN configurations for each user.
+    4. Deploys Docker containers as specified in the YAML file.
+    5. Handles the creation and modification of OpenVPN configuration files.
 
-Args: 
-  - config: yaml file which is specified above
-  - save_path: Path where the user date gets saved
+Args:
+  - config: Path to the YAML configuration file.
+  - save_path: Directory where user data will be saved.
 """
 
-# Imports
 import docker_functions as doc
 import docker
 import pyyaml_functions as yaml_func
@@ -33,7 +38,6 @@ import ovpn_helper_functions as ovpn_func
 import readme_functions as readme
 import time
 import hosts_functions as hosts_func
-import sys
 
 # Click for reading data from the terminal 
 @click.command()
@@ -43,16 +47,17 @@ def main(config, save_path):
   """
   Main function of the CTF-Creator.
 
-  Functionalities:
-    1. Connects using a WireGuard connection defined in the YAML file.
-    2. Cleans up all existing networks and running containers.
-    3. Creates a network for each user.
-    4. Creates an OpenVPN server and an ovpn.config for each user.
-    5. Creates all Docker containers defined in the YAML file for each user.
+  This function performs the following tasks:
+    1. Loads and parses the YAML configuration file.
+    2. Connects to hosts using SSH keys specified in the YAML file.
+    3. Cleans up existing Docker containers and networks on each host.
+    4. Creates Docker networks and OpenVPN servers, and generates configuration files for each user.
+    5. Deploys Docker containers as specified in the YAML file.
+    6. Modifies OpenVPN configuration files to include split VPN settings and updates existing configurations if present.
 
   Args:
-    - config: Path to Yaml configuration file 
-    - save_path: Save path for the user data
+    - config (str): Path to the YAML configuration file.
+    - save_path (str): Directory where user data will be saved.
   """
 
   try:

@@ -1,19 +1,19 @@
 """
-This module provides the main functionalities for the CTF-Creator,
-including creating Docker containers and networks with specific configurations.
+This module provides functionalities for managing Docker containers and networks,
+as well as configuring OpenVPN servers.
 
-The main functionalities include:
-1. Creating Docker containers with specific static addresses.
-2. Setting up an OpenVPN server and generating OpenVPN configurations for users.
-3. Creating a jump host for secure access.
-4. Creating Docker networks with specific IPAM configurations.
+The primary functionalities include:
+1. Creating Docker containers with specific static IP addresses.
+2. Setting up and configuring OpenVPN servers.
+3. Generating OpenVPN configuration files for users.
+4. Creating Docker networks with IPAM configurations.
 
 Functions:
-- create_container(client, network_name, name, image, static_address): Creates a Docker container with the given name and image.
-- create_openvpn_server(client, network_name, name, static_address, counter, host_address): Creates an OpenVPN server container with specific configurations.
-- create_openvpn_config(client, user_name, counter, host_address, save_path, new_push_route): Generates an OpenVPN configuration for a specified user.
-- create_jump_host(client, network_name, name, static_address, counter, host): Creates a jump host with specific settings.
+- create_container(client, network_name, name, image, static_address): Creates a Docker container with a specified name, image, and static IP address.
+- create_openvpn_server(client, network_name, name, static_address, counter, host_address): Creates an OpenVPN server container with specified configurations.
+- create_openvpn_server_with_existing_data(client, network_name, name, static_address, counter, host_address, remote_path_to_mount): Creates an OpenVPN server container using existing data.
 - create_network(client, name, subnet_, gateway_): Creates a Docker network with IPAM configuration.
+- create_openvpn_config(client, user_name, counter, host_address, save_path, new_push_route): Generates an OpenVPN configuration for a specified user.
 """
 
 import docker
@@ -26,20 +26,20 @@ import time
 
 def create_container(client, network_name, name, image, static_address):
     """
-    Create a Docker container with the given name and image.
+    Create a Docker container with a specific name, image, and static IP address.
 
     Args:
         client (docker.DockerClient): An instance of the Docker client.
-        network_name (str): The name of the network to use.
+        network_name (str): The name of the network to connect the container to.
         name (str): The name of the container to create (must be unique).
-        image (str): The image to run as the container.
-        static_address (str): The IPv4 address to use for the container.
+        image (str): The Docker image to use for the container.
+        static_address (str): The static IPv4 address to assign to the container.
 
     Returns:
-        docker.models.containers.Container: The container that was created.
+        docker.models.containers.Container: The created Docker container.
 
     Raises:
-        docker.errors.APIError: If an error occurred during the creation of the container.
+        docker.errors.APIError: If an error occurs during the container creation process.
     """
     endpoint_config = docker.types.EndpointConfig(
         version='1.44',
@@ -65,19 +65,18 @@ def create_openvpn_server(client, network_name, name, static_address, counter, h
 
     Args:
         client (docker.DockerClient): An instance of the Docker client.
-        network_name (str): The name of the network to use.
-        name (str): The base name of the container to create.
-        static_address (str): The IPv4 address to use for the container.
-        counter (int): A counter to ensure unique port assignments.
-        host_address (str): The host address for the OpenVPN configuration.
+        network_name (str): The name of the network to connect the container to.
+        name (str): The base name of the OpenVPN server container.
+        static_address (str): The static IPv4 address to assign to the OpenVPN server.
+        counter (int): Counter for port assignment to ensure uniqueness.
+        host_address (str): The host address to be used in the OpenVPN configuration.
 
     Returns:
-        docker.models.containers.Container: The container that was created.
+        docker.models.containers.Container: The created OpenVPN server container.
 
     Raises:
-        docker.errors.APIError: If an error occurred during the creation of the container.
+        docker.errors.APIError: If an error occurs during the container creation process.
     """
-  
     endpoint_config = docker.types.EndpointConfig(
         version='1.44',
         ipv4_address=static_address
@@ -108,23 +107,22 @@ def create_openvpn_server(client, network_name, name, static_address, counter, h
 
 def create_openvpn_server_with_existing_data(client, network_name, name, static_address, counter, host_address, remote_path_to_mount):
     """
-    Create an OpenVPN server container with specific configurations.
+    Create an OpenVPN server container with existing data mounted.
 
     Args:
         client (docker.DockerClient): An instance of the Docker client.
-        network_name (str): The name of the network to use.
-        name (str): The base name of the container to create.
-        static_address (str): The IPv4 address to use for the container.
-        counter (int): A counter to ensure unique port assignments.
-        host_address (str): The host address for the OpenVPN configuration.
-
-        !!!!!!!
+        network_name (str): The name of the network to connect the container to.
+        name (str): The base name of the OpenVPN server container.
+        static_address (str): The static IPv4 address to assign to the OpenVPN server.
+        counter (int): Counter for port assignment to ensure uniqueness.
+        host_address (str): The host address to be used in the OpenVPN configuration.
+        remote_path_to_mount (str): The path to the directory on the host to mount into the container.
 
     Returns:
-        docker.models.containers.Container: The container that was created.
+        docker.models.containers.Container: The created OpenVPN server container with existing data mounted.
 
     Raises:
-        docker.errors.APIError: If an error occurred during the creation of the container.
+        docker.errors.APIError: If an error occurs during the container creation process.
     """
   
     endpoint_config = docker.types.EndpointConfig(
@@ -157,23 +155,19 @@ def create_openvpn_server_with_existing_data(client, network_name, name, static_
         print(f"Error creating container: {e}")
         raise
 
-def download_tar_from_container():
-    print("dummy")
-    #!!! not done copy code part from create split vpn on host and use it there 
-    #!!! and download in te create split vpn on host the config folder too!
 
 
 def create_openvpn_config(client, user_name, counter, host_address, save_path, new_push_route):
     """
-    Generate a new OpenVPN configuration for the specified user.
+    Generate an OpenVPN configuration file for a specified user.
 
     Args:
         client (docker.DockerClient): An instance of the Docker client.
         user_name (str): The name of the user for whom to create the configuration.
         counter (int): Counter value for constructing URLs or commands.
-        host_address (str): Host address for downloading files or executing commands.
-        save_path (str): The path to save and retrieve configuration files.
-        new_push_route (str): The new route to push to the client.
+        host_address (str): The address of the host for downloading files or executing commands.
+        save_path (str): The path to save the OpenVPN configuration files.
+        new_push_route (str): The new route to push to the OpenVPN client.
 
     Raises:
         docker.errors.NotFound: If the OpenVPN container for the user is not found.
@@ -222,16 +216,19 @@ def create_openvpn_config(client, user_name, counter, host_address, save_path, n
 
 def create_network(client, name, subnet_, gateway_):
     """
-    Create a Docker network with IPAM configuration.
+    Create a Docker network with specific IPAM configuration.
 
     Args:
-        client (docker.DockerClient): An initialized Docker client.
+        client (docker.DockerClient): An instance of the Docker client.
         name (str): The name of the network to create.
-        subnet_ (str): The subnet to use for the network.
-        gateway_ (str): The gateway to use for the network.
+        subnet_ (str): The subnet to use for the network (e.g., '192.168.1.0/24').
+        gateway_ (str): The gateway to use for the network (e.g., '192.168.1.1').
 
     Returns:
-        docker.models.networks.Network: The network that was created.
+        docker.models.networks.Network: The created Docker network.
+
+    Raises:
+        docker.errors.APIError: If an error occurs during the network creation process.
     """
     ipam_pool = docker.types.IPAMPool(
         subnet=subnet_,

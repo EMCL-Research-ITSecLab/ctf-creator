@@ -1,3 +1,16 @@
+"""
+This module provides functionalities for managing SSH connections and operations,
+including host reachability checks via ping and SSH, executing commands over SSH,
+and transferring and extracting tar files on remote hosts.
+
+Functions:
+- check_host_reachability_with_ping(host_ips): Checks the reachability of hosts using ping.
+- check_ssh_connection(host_info): Verifies SSH connectivity and credentials for a given host.
+- check_host_reachability_with_SSH(host_infos): Checks SSH connectivity and credentials for a list of hosts.
+- execute_ssh_command(user_host, command, remote_port=22): Executes a command on a remote host via SSH.
+- send_and_extract_tar_via_ssh(tar_file_path, host_username, remote_host, remote_path, remote_port=22): Sends a tar file to a remote host and extracts it.
+"""
+
 import subprocess
 import sys
 import time
@@ -5,6 +18,15 @@ import os
 import paramiko
 
 def check_host_reachability_with_ping(host_ips):
+    """
+    Checks the reachability of a list of hosts using the ping command.
+
+    Args:
+        host_ips (list of str): List of host IP addresses to check.
+
+    Raises:
+        SystemExit: If any host is unreachable, prints the unreachable hosts and exits the program.
+    """
     unreachable_hosts = []
     
     for host in host_ips:
@@ -27,6 +49,15 @@ def check_host_reachability_with_ping(host_ips):
 
 
 def check_ssh_connection(host_info):
+    """
+    Checks SSH connectivity and credentials for a given host. Helper function.
+
+    Args:
+        host_info (str): Host information in the format 'user@host'.
+
+    Returns:
+        bool: True if SSH connection is successful, False otherwise.
+    """
     try:
         # Attempt to SSH into the host
         result = subprocess.run(
@@ -53,6 +84,15 @@ def check_ssh_connection(host_info):
 
 #Uses also the unsername so you can deduce if the host Ip is wrong or the username!
 def check_host_reachability_with_SSH(host_infos):
+    """
+    Checks SSH connectivity and credentials for a list of hosts.
+
+    Args:
+        host_infos (list of str): List of host information in the format 'user@host'.
+
+    Raises:
+        SystemExit: If any host has incorrect SSH credentials or is unreachable, prints the problematic hosts and exits the program.
+    """
     unreachable_hosts = []
 
     for host_info in host_infos:
@@ -72,6 +112,17 @@ def check_host_reachability_with_SSH(host_infos):
 
 
 def execute_ssh_command(user_host, command, remote_port=22):
+    """
+    Executes a command on a remote host via SSH.
+
+    Args:
+        user_host (str): User and host information in the format 'user@host'.
+        command (str): The command to execute on the remote host.
+        remote_port (int, optional): The port to use for SSH (default is 22).
+
+    Returns:
+        tuple: A tuple containing the command's output and error messages.
+    """
     # Parse the user and host from the user_host variable
     username, remote_host = user_host.split('@')
     
@@ -112,7 +163,19 @@ def execute_ssh_command(user_host, command, remote_port=22):
 
 
 def send_and_extract_tar_via_ssh(tar_file_path, host_username, remote_host, remote_path, remote_port=22):
-   
+    """
+    Sends a tar file to a remote host via SSH and extracts it.
+
+    Args:
+        tar_file_path (str): The path to the tar file on the local system.
+        host_username (str): The username to use for SSH.
+        remote_host (str): The remote host to connect to.
+        remote_path (str): The path on the remote host where the tar file will be placed and extracted.
+        remote_port (int, optional): The port to use for SSH (default is 22).
+
+    Raises:
+        PermissionError: If there is a permission issue on the remote host.
+    """
     
     # Create an SSH client
     ssh = paramiko.SSHClient()
