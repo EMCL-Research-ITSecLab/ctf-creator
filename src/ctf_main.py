@@ -38,11 +38,12 @@ import ovpn_helper_functions as ovpn_func
 import readme_functions as readme
 import time
 import hosts_functions as hosts_func
+import validation_functions as valid
 
 # Click for reading data from the terminal 
 @click.command()
-@click.option('--config', prompt='Please enter the path to your .yaml file', help='The path to the .yaml configuration file for the CTF-Creator.')
-@click.option('--save_path', prompt="Please enter the path where you want to save the user data e.g. /home/nick/ctf-creator", help="The path where you want to save the user data for the CTF-Creator. E.g. /home/nick/ctf-creator")
+@click.option('--config', prompt='Please enter the path to your .yaml file', help='The path to the .yaml configuration file for the CTF-Creator.',callback=valid.validate_yaml_file)
+@click.option('--save_path', prompt="Please enter the path where you want to save the user data e.g. /home/nick/ctf-creator", help="The path where you want to save the user data for the CTF-Creator. E.g. /home/nick/ctf-creator", callback=valid.validate_save_path)
 def main(config, save_path):
   """
   Main function of the CTF-Creator.
@@ -64,6 +65,7 @@ def main(config, save_path):
     with open(config, 'r') as file:
       data = yaml.safe_load(file)
       click.echo('YAML file loaded successfully.')
+      click.echo(f"Save path '{save_path}' is valid.")
     # Process the YAML data as needed for the CTF-Creator
       containers,users,key,hosts,subnet_first_part,subnet_second_part,subnet_third_part  = yaml_func.read_data_from_yaml(data)
       click.echo(f"Containers: {containers}")
