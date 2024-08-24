@@ -111,18 +111,24 @@ def modify_ovpn_file(file_path, new_port, new_route_ip):
 
 
 
-def modify_ovpn_file_change_host(file_path, new_ip, new_port):
+
+def modify_ovpn_file_change_host(file_path, new_ip, new_port, username):
     """
-    Changes the IP address and port in the 'remote' line of an OpenVPN configuration file.
+    Changes the IP address and port in the 'remote' line of an OpenVPN configuration file
+    only if the IP address or port is different from the current values.
 
     Args:
         file_path (str): Path to the OpenVPN configuration file.
         new_ip (str): New IP address to replace in the 'remote' line.
         new_port (int): New port number to replace in the 'remote' line.
+        username (str): Username associated with the OpenVPN configuration file.
+
+    Returns:
+        str: The username if the configuration was changed, otherwise None.
     """
     if not os.path.exists(file_path):
         print(f"File {file_path} does not exist.")
-        return
+        return None
 
     modified_lines = []
 
@@ -130,23 +136,34 @@ def modify_ovpn_file_change_host(file_path, new_ip, new_port):
         lines = file.readlines()
 
     remote_line_found = False
+    change_needed = False
 
     for line in lines:
         if line.startswith("remote "):
             parts = line.split()
             if len(parts) == 3:
-                parts[1] = str(new_ip)
-                parts[2] = str(new_port)
-                line = " ".join(parts) + "\n"
+                current_ip = parts[1]
+                current_port = parts[2]
+
+                if current_ip != new_ip or current_port != str(new_port):
+                    parts[1] = str(new_ip)
+                    parts[2] = str(new_port)
+                    line = " ".join(parts) + "\n"
+                    change_needed = True
+
                 remote_line_found = True
         
         modified_lines.append(line)
 
     if not remote_line_found:
         print("No 'remote' line found in the file.")
-        return
+        return None
 
-    with open(file_path, 'w') as file:
-        file.writelines(modified_lines)
-
-    print(f"IP address and port in the 'remote' line of {file_path} have been successfully modified.")
+    if change_needed:
+        with open(file_path, 'w') as file:
+            file.writelines(modified_lines)
+        print(f"IP address and port in the 'remote' line of {file_path} have been successfully modified.")
+        return username
+    else:
+        print(f"No change needed for {username}. The IP address and port are already correct.")
+        return None

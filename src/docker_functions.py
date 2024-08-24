@@ -105,7 +105,7 @@ def create_openvpn_server(client, network_name, name, static_address, counter, h
         print(f"Error creating container: {e}")
         raise
 
-def create_openvpn_server_with_existing_data(client, network_name, name, static_address, counter, host_address, remote_path_to_mount):
+def create_openvpn_server_with_existing_data(client, network_name, name, static_address,port_number, host_address, remote_path_to_mount):
     """
     Create an OpenVPN server container with existing data mounted.
 
@@ -138,8 +138,8 @@ def create_openvpn_server_with_existing_data(client, network_name, name, static_
             restart_policy={"Name": "always"},
             cap_add=["NET_ADMIN"],
             ports={
-                '1194/udp': (1194 + counter),
-                '8080/tcp': (80 + counter)
+                '1194/udp': (port_number),
+                '8080/tcp': (port_number)
             },
             environment={
                 "HOST_ADDR": f"{host_address}",

@@ -22,7 +22,11 @@ containers:
   
 # Usernames/ Uni-IDs
 users:
-  - tz251
+  - abc1
+  - abc2
+  - abc3
+  - abc4
+  - abc5
 
 # For SSH Connection
 # Direction of your private SSH key
@@ -33,6 +37,9 @@ identityFile:
 # E.g. user@hostIPadress
 hosts:
   - ubuntu@10.20.30.101
+  - ubuntu@10.20.30.102
+  - ubuntu@10.20.30.103
+ # - ubuntu@10.20.30.104
 
 
 # IP Adress: firstpart.xx.xx.xx/24

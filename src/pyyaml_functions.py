@@ -177,4 +177,22 @@ def extract_host_usernames(hosts):
 
     return extracted_usernames
 
+def find_host_username_by_ip(hosts, existing_host_ip):
+    """
+    Finds the username associated with a given IP address from a list of host entries.
 
+    Args:
+        hosts (list): A list of host entries in the format 'username@ipaddress'.
+        existing_host_ip (str): The IP address to find in the hosts list.
+
+    Returns:
+        str: The username associated with the given IP address, or None if not found.
+
+    """
+    for host in hosts:
+        username, ip_address = host.split('@')
+        if ip_address == existing_host_ip:
+            return username
+    
+    print(f"Warning: The IP address {existing_host_ip} in the client.ovpn is not defined in the YAML configuration for the CTF-Creator.")
+    return None

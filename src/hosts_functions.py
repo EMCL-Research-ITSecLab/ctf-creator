@@ -42,7 +42,7 @@ def check_host_reachability_with_ping(host_ips):
         print("The following hosts are unreachable:")
         for host in unreachable_hosts:
             print(f"- {host}")
-        print("Please check if you are connected to the correct WireGuard VPN to ensure connectivity with these hosts.")
+        print("Please check if you are connected to the correct network to ensure connectivity with these hosts.")
         sys.exit(1)
     else:
         print("All hosts are reachable with ping.")
@@ -104,7 +104,7 @@ def check_host_reachability_with_SSH(host_infos):
         print("The following hosts are unreachable or have incorrect SSH credentials:")
         for host_info in unreachable_hosts:
             print(f"- {host_info}")
-        print("Please check if you are connected to the correct WireGuard VPN and using the correct SSH host-username.")
+        print("Please check if you are connected to the correct network and using the correct SSH host-username.")
         sys.exit(1)
     else:
         print("All SSH connections to hosts were successful.")
@@ -236,3 +236,47 @@ def send_and_extract_tar_via_ssh(tar_file_path, host_username, remote_host, remo
         # Close the SSH connection
         print("Closing the SSH connection...")
         ssh.close()
+
+def extract_ovpn_info(file_path):
+    """
+    Extracts the host IP address, port number, and subnet from an OpenVPN configuration file.
+
+    Args:
+        file_path (str): Path to the OpenVPN configuration file.
+
+    Returns:
+        tuple: A tuple containing:
+            - host_ip_address (str): The IP address found after the 'remote' keyword.
+            - port_number (int): The port number found after the IP address on the 'remote' line.
+            - subnet (str): The subnet extracted from the 'route' line (first three sections of the IP address).
+    """
+    if not os.path.exists(file_path):
+        print(f"File {file_path} does not exist.")
+        return None
+
+    host_ip_address = None
+    port_number = None
+    subnet = None
+
+    with open(file_path, 'r') as file:
+        lines = file.readlines()
+
+    for line in lines:
+        if line.startswith("remote "):
+            parts = line.split()
+            if len(parts) == 3:
+                host_ip_address = parts[1]
+                port_number = int(parts[2])
+
+        if line.startswith("route "):
+            parts = line.split()
+            if len(parts) >= 2:
+                ip_parts = parts[1].split('.')
+                if len(ip_parts) >= 3:
+                    subnet = f"{ip_parts[0]}.{ip_parts[1]}.{ip_parts[2]}"
+
+    if host_ip_address and port_number and subnet:
+        return host_ip_address, port_number, subnet
+    else:
+        print("Failed to extract all necessary information.")
+        return None
