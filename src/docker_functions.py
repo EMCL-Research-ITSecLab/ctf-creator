@@ -205,7 +205,7 @@ def create_openvpn_config(client, user_name, counter, host_address, save_path, n
         with open(local_path_to_data, "wb") as f:
             for chunk in archive:
                 f.write(chunk)
-        print(f"Container found: {container_name}", "And the Dockovpn_data folder is saved on the host")
+        print(f"Container found: {container_name}", "And the Dockovpn_data folder is saved on this system")
     except docker.errors.NotFound:
         print(f"Error: Container {container_name} not found.")
         exit(1)

@@ -85,7 +85,7 @@ def main(config, save_path):
     click.echo(f"Number of remaining users to be distributed uniformly: {number_rest_users}")
     # Extract Host Ip-Address from yaml file
     extracted_hosts = yaml_func.extract_hosts(hosts)
-    extracted_hosts_username = yaml_func.extract_host_usernames(hosts)
+    extracted_hosts_username=yaml_func.extract_host_usernames(hosts)
     try:
       hosts_func.check_host_reachability_with_ping(extracted_hosts)
     except Exception as e:
@@ -122,7 +122,7 @@ def main(config, save_path):
     # Clean up first
     # Initialize Docker client using the SSH connection
     # Remove all containers from the hosts
-    click.echo("Start to clean up the Hosts. Deletes old Docker-containers and networks. It might take some time.")
+    click.echo("Start to clean up the Hosts. Deletes old Docker-containers and networks")
     for host in hosts:
       docker_client =  docker.DockerClient(base_url=f"ssh://{host}")
       docker_client.containers.prune()
@@ -146,7 +146,6 @@ def main(config, save_path):
     current_vm = 1
     current_host = extracted_hosts[current_vm-1]
     docker_client =  docker.DockerClient(base_url=f"ssh://{hosts[current_vm-1]}")
-    new_changed_ovpn_files_users = []
     for k in range (len(users)): 
       user_name = f"user_{users[k]}"
       network_name = f"{user_name}_network"
@@ -169,12 +168,11 @@ def main(config, save_path):
         current_vm +=1
         docker_client =  docker.DockerClient(base_url=f"ssh://{hosts[current_vm-1]}")
         current_host = extracted_hosts[current_vm-1]
-      # !!! here is the og line! doc.create_network(docker_client,network_name,subnet,gateway)
-      # 1st use case
+      doc.create_network(docker_client,network_name,subnet,gateway)
+      
       # Create Open VPN Server if save data for user is not existing!
       local_save_path_to_user = f"{save_path}/data/{user_name}"
       if not os.path.exists(local_save_path_to_user):
-        doc.create_network(docker_client,network_name,subnet,gateway)
         click.echo(f"For the user: {user_name}, an OpenVPN configuration file will be generated!")
         doc.create_openvpn_server(docker_client,network_name,user_name,f"{subnet_first_part}.{subnet_second_part}.{subnet_base}.2",k, current_host)
         # Create Open VPN files
@@ -187,44 +185,20 @@ def main(config, save_path):
         readme.write_readme_for_ovpn_connection(local_save_path_to_user,f"{subnet_first_part}.{subnet_second_part}.{subnet_base}",containers)
       # Starts OpenVPN-Container with existing data in save_path
       else:
-        # 2nd and 3rd use case 
         click.echo(f"OpenVPN data exists for the user: {user_name}")
         click.echo(f"Data for the user: {user_name} will NOT be changed. Starting OVPN Docker container with existing data")
-        existing_host_ip, existing_port_number, existing_subnet = hosts_func.extract_ovpn_info(f"{save_path}/data/{user_name}/client.ovpn")
-        existing_host_username = yaml_func.find_host_username_by_ip(hosts,existing_host_ip)
-        if existing_host_username is None:
-          existing_host_username = yaml_func.find_host_username_by_ip(hosts,current_host)
-        if existing_host_ip in extracted_hosts:
-          print(f"The remote host {existing_host_ip} in the already generated client.ovpn is existing. Everything is fine!")
-        else:
-          # 4th use case changed remote host in yaml config
-          print(f"The remote host {existing_host_ip} in the old client.ovpn is not existing anymore.")
-          print(f"The generated client.ovpn for {user_name} gets changed locally. Please inform {user_name} and give him the new client.ovpn")
-          # Existing host is not existing anymore so change it into the current on from the loop iteration
-          existing_host_ip = current_host
-          changed_ovpn_username = ovpn_func.modify_ovpn_file_change_host(f"{save_path}/data/{user_name}/client.ovpn",current_host,existing_port_number,user_name)
-          if changed_ovpn_username:
-            new_changed_ovpn_files_users.append(changed_ovpn_username)
         # Send existing openvpn_data to hosts
-        hosts_func.send_and_extract_tar_via_ssh(f"{save_path}/data/{user_name}/dockovpn_data.tar",existing_host_username, existing_host_ip,f"/home/{existing_host_username}/ctf-data/{user_name}/dock_vpn_data.tar")
+        hosts_func.send_and_extract_tar_via_ssh(f"{save_path}/data/{user_name}/dockovpn_data.tar",extracted_hosts_username[current_vm-1],extracted_hosts[current_vm-1],f"/home/{extracted_hosts_username[current_vm-1]}/ctf-data/{user_name}/dock_vpn_data.tar")
         time.sleep(2)
-        # Change docker_client to the host which is in the already existing client.ovpn
-        docker_client =  docker.DockerClient(base_url=f"ssh://{existing_host_username}@{existing_host_ip}")
-        doc.create_network(docker_client,network_name,f"{existing_subnet}.0/24",f"{existing_subnet}.1")
-        time.sleep(1)
         # Creates Openvpn server with existing data
-        doc.create_openvpn_server_with_existing_data(docker_client,network_name,user_name,f"{existing_subnet}.2",existing_port_number, existing_host_ip,f"/home/{existing_host_username}/ctf-data/{user_name}/Dockovpn_data/")
+        doc.create_openvpn_server_with_existing_data(docker_client,network_name,user_name,f"{subnet_first_part}.{subnet_second_part}.{subnet_base}.2",k, current_host,f"/home/{extracted_hosts_username[current_vm-1]}/ctf-data/{user_name}/Dockovpn_data/")
+        ovpn_func.modify_ovpn_file_change_host(f"{save_path}/data/{user_name}/client.ovpn",current_host,1194+k)
         click.echo(f"For {user_name } the OVPN Docker container is running and can be connected with the the existing data")
       
       # Create a container for each container in the list of containers.
       for i, element in enumerate(containers):
         container_name = element.split(':')[0]
         doc.create_container(docker_client,network_name,user_name + f"_{container_name}_" + f"{i}", f"{element}", f"{subnet_first_part}.{subnet_second_part}.{subnet_base}.{3+i}")
-    # Print all changed usernames
-    if new_changed_ovpn_files_users:
-      click.echo("The following users had their OVPN files changed:")
-      for user in new_changed_ovpn_files_users:
-        click.echo(user)
     print("Done.")
   except FileNotFoundError:
     click.echo('Error: The specified file was not found.')
