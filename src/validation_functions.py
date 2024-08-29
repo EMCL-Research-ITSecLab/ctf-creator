@@ -15,6 +15,7 @@ import os
 import click
 import yaml
 
+
 def validate_save_path(ctx, param, value):
     """
     Validate the save_path provided by the user.
@@ -43,20 +44,20 @@ def validate_yaml_file(ctx, param, value):
     # Check if the path exists
     if not os.path.exists(value):
         raise click.BadParameter(f"The file '{value}' does not exist.")
-    
+
     # Check if it's a file (not a directory)
     if not os.path.isfile(value):
         raise click.BadParameter(f"The path '{value}' is not a file.")
-    
+
     # Check if the file has a .yaml or .yml extension
-    if not (value.endswith('.yaml') or value.endswith('.yml')):
+    if not (value.endswith(".yaml") or value.endswith(".yml")):
         raise click.BadParameter("The file must have a .yaml or .yml extension.")
-    
+
     # Try to load the file using a YAML parser to ensure it's a valid YAML
     try:
-        with open(value, 'r') as file:
+        with open(value, "r") as file:
             yaml.safe_load(file)
     except yaml.YAMLError as exc:
         raise click.BadParameter(f"The file '{value}' is not a valid YAML file: {exc}")
-    
+
     return value

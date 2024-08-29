@@ -33,7 +33,10 @@ def check_host_reachability_with_ping(host_ips):
     for host in host_ips:
         try:
             result = subprocess.run(
-                ['ping', '-c', '1', host], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                ["ping", "-c", "1", host],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
             if result.returncode != 0:
                 unreachable_hosts.append(host)
         except Exception as e:
@@ -44,7 +47,9 @@ def check_host_reachability_with_ping(host_ips):
         print("The following hosts are unreachable:")
         for host in unreachable_hosts:
             print(f"- {host}")
-        print("Please check if you are connected to the correct network to ensure connectivity with these hosts.")
+        print(
+            "Please check if you are connected to the correct network to ensure connectivity with these hosts."
+        )
         sys.exit(1)
     else:
         print("All hosts are reachable with ping.")
@@ -63,16 +68,14 @@ def check_ssh_connection(host_info):
     try:
         # Attempt to SSH into the host
         result = subprocess.run(
-            ['ssh', host_info, 'exit'],
-            capture_output=True,
-            text=True,
-            timeout=10
+            ["ssh", host_info, "exit"], capture_output=True, text=True, timeout=10
         )
 
         if result.returncode != 0:
             if "Permission denied" in result.stderr:
                 print(
-                    f"SSH connection to {host_info} failed due to incorrect username or password.")
+                    f"SSH connection to {host_info} failed due to incorrect username or password."
+                )
             else:
                 print(f"SSH connection to {host_info} failed: {result.stderr}")
             return False
@@ -107,7 +110,9 @@ def check_host_reachability_with_SSH(host_infos):
         print("The following hosts are unreachable or have incorrect SSH credentials:")
         for host_info in unreachable_hosts:
             print(f"- {host_info}")
-        print("Please check if you are connected to the correct network and using the correct SSH host-username.")
+        print(
+            "Please check if you are connected to the correct network and using the correct SSH host-username."
+        )
         sys.exit(1)
     else:
         print("All SSH connections to hosts were successful.")
@@ -126,7 +131,7 @@ def execute_ssh_command(user_host, command, remote_port=22):
         tuple: A tuple containing the command's output and error messages.
     """
     # Parse the user and host from the user_host variable
-    username, remote_host = user_host.split('@')
+    username, remote_host = user_host.split("@")
 
     # Create an SSH client
     ssh = paramiko.SSHClient()
@@ -164,7 +169,9 @@ def execute_ssh_command(user_host, command, remote_port=22):
         ssh.close()
 
 
-def send_and_extract_tar_via_ssh(tar_file_path, host_username, remote_host, remote_path, remote_port=22):
+def send_and_extract_tar_via_ssh(
+    tar_file_path, host_username, remote_host, remote_path, remote_port=22
+):
     """
     Sends a tar file to a remote host via SSH and extracts it.
 
@@ -198,12 +205,13 @@ def send_and_extract_tar_via_ssh(tar_file_path, host_username, remote_host, remo
 
         # Ensure the remote directory exists
         print(f"Ensuring the remote directory {remote_dir} exists...")
-        mkdir_command = f'mkdir -p {remote_dir}'
+        mkdir_command = f"mkdir -p {remote_dir}"
         stdin, stdout, stderr = ssh.exec_command(mkdir_command)
         mkdir_error = stderr.read().decode().strip()
         if mkdir_error:
             raise PermissionError(
-                f"Failed to create directory {remote_dir}: {mkdir_error}")
+                f"Failed to create directory {remote_dir}: {mkdir_error}"
+            )
         stdout.channel.recv_exit_status()  # Wait for the command to complete
 
         # Use SFTP to copy the tar file
@@ -212,12 +220,11 @@ def send_and_extract_tar_via_ssh(tar_file_path, host_username, remote_host, remo
         sftp.put(tar_file_path, remote_path)
         sftp.close()
 
-        print(
-            f"File {tar_file_path} successfully sent to {remote_host}:{remote_path}")
+        print(f"File {tar_file_path} successfully sent to {remote_host}:{remote_path}")
 
         # Ensure correct permissions for the remote path and extract the tar file
         print(f"Extracting tar file {remote_path} on {remote_host}...")
-        extract_command = f'tar -xf {remote_path} -C {remote_dir}'
+        extract_command = f"tar -xf {remote_path} -C {remote_dir}"
         stdin, stdout, stderr = ssh.exec_command(extract_command)
         stdout.channel.recv_exit_status()  # Wait for the command to complete
 
@@ -263,7 +270,7 @@ def extract_ovpn_info(file_path):
     port_number = None
     subnet = None
 
-    with open(file_path, 'r') as file:
+    with open(file_path, "r") as file:
         lines = file.readlines()
 
     for line in lines:
@@ -276,7 +283,7 @@ def extract_ovpn_info(file_path):
         if line.startswith("route "):
             parts = line.split()
             if len(parts) >= 2:
-                ip_parts = parts[1].split('.')
+                ip_parts = parts[1].split(".")
                 if len(ip_parts) >= 3:
                     subnet = f"{ip_parts[0]}.{ip_parts[1]}.{ip_parts[2]}"
 

@@ -43,8 +43,7 @@ def create_container(client, network_name, name, image, static_address):
         docker.errors.APIError: If an error occurs during the container creation process.
     """
     endpoint_config = docker.types.EndpointConfig(
-        version='1.44',
-        ipv4_address=static_address
+        version="1.44", ipv4_address=static_address
     )
     try:
         container = client.containers.run(
@@ -52,8 +51,7 @@ def create_container(client, network_name, name, image, static_address):
             detach=True,
             name=name,
             network=network_name,
-            networking_config={
-                network_name: endpoint_config}
+            networking_config={network_name: endpoint_config},
         )
         return container
     except docker.errors.APIError as e:
@@ -61,7 +59,9 @@ def create_container(client, network_name, name, image, static_address):
         raise
 
 
-def create_openvpn_server(client, network_name, name, static_address, counter, host_address):
+def create_openvpn_server(
+    client, network_name, name, static_address, counter, host_address
+):
     """
     Create an OpenVPN server container with specific configurations.
 
@@ -80,8 +80,7 @@ def create_openvpn_server(client, network_name, name, static_address, counter, h
         docker.errors.APIError: If an error occurs during the container creation process.
     """
     endpoint_config = docker.types.EndpointConfig(
-        version='1.44',
-        ipv4_address=static_address
+        version="1.44", ipv4_address=static_address
     )
     try:
         container = client.containers.run(
@@ -91,16 +90,11 @@ def create_openvpn_server(client, network_name, name, static_address, counter, h
             network=network_name,
             restart_policy={"Name": "always"},
             cap_add=["NET_ADMIN"],
-            ports={
-                '1194/udp': (1194 + counter),
-                '8080/tcp': (80 + counter)
-            },
+            ports={"1194/udp": (1194 + counter), "8080/tcp": (80 + counter)},
             environment={
                 "HOST_ADDR": f"{host_address}",
             },
-            networking_config={
-                network_name: endpoint_config
-            }
+            networking_config={network_name: endpoint_config},
         )
         return container
     except docker.errors.APIError as e:
@@ -108,7 +102,15 @@ def create_openvpn_server(client, network_name, name, static_address, counter, h
         raise
 
 
-def create_openvpn_server_with_existing_data(client, network_name, name, static_address, port_number, host_address, remote_path_to_mount):
+def create_openvpn_server_with_existing_data(
+    client,
+    network_name,
+    name,
+    static_address,
+    port_number,
+    host_address,
+    remote_path_to_mount,
+):
     """
     Create an OpenVPN server container with existing data mounted.
 
@@ -129,8 +131,7 @@ def create_openvpn_server_with_existing_data(client, network_name, name, static_
     """
 
     endpoint_config = docker.types.EndpointConfig(
-        version='1.44',
-        ipv4_address=static_address
+        version="1.44", ipv4_address=static_address
     )
     try:
         container = client.containers.run(
@@ -140,18 +141,12 @@ def create_openvpn_server_with_existing_data(client, network_name, name, static_
             network=network_name,
             restart_policy={"Name": "always"},
             cap_add=["NET_ADMIN"],
-            ports={
-                '1194/udp': (port_number),
-                '8080/tcp': (port_number)
-            },
+            ports={"1194/udp": (port_number), "8080/tcp": (port_number)},
             environment={
                 "HOST_ADDR": f"{host_address}",
             },
-            networking_config={
-                network_name: endpoint_config
-            },
-            volumes=[f"{remote_path_to_mount}:/opt/Dockovpn_data"]
-
+            networking_config={network_name: endpoint_config},
+            volumes=[f"{remote_path_to_mount}:/opt/Dockovpn_data"],
         )
         return container
     except docker.errors.APIError as e:
@@ -159,7 +154,9 @@ def create_openvpn_server_with_existing_data(client, network_name, name, static_
         raise
 
 
-def create_openvpn_config(client, user_name, counter, host_address, save_path, new_push_route):
+def create_openvpn_config(
+    client, user_name, counter, host_address, save_path, new_push_route
+):
     """
     Generate an OpenVPN configuration file for a specified user.
 
@@ -193,7 +190,8 @@ def create_openvpn_config(client, user_name, counter, host_address, save_path, n
         # Delay to give time to run the command in the container
         time.sleep(5)
         ovpn_func.curl_client_ovpn_file_version(
-            container, host_address, user_name, counter, save_path)
+            container, host_address, user_name, counter, save_path
+        )
 
     except Exception as e:
         print(f"Error: Unable to execute command in container. {e}")
@@ -208,14 +206,15 @@ def create_openvpn_config(client, user_name, counter, host_address, save_path, n
         with open(local_path_to_data, "wb") as f:
             for chunk in archive:
                 f.write(chunk)
-        print(f"Container found: {container_name}",
-              "And the Dockovpn_data folder is saved on this system")
+        print(
+            f"Container found: {container_name}",
+            "And the Dockovpn_data folder is saved on this system",
+        )
     except docker.errors.NotFound:
         print(f"Error: Container {container_name} not found.")
         exit(1)
     except Exception as e:
-        print(
-            f"Error: Something is wrong with the saving of the ovpn_data!. {e}")
+        print(f"Error: Something is wrong with the saving of the ovpn_data!. {e}")
         exit(1)
 
 
@@ -235,13 +234,10 @@ def create_network(client, name, subnet_, gateway_):
     Raises:
         docker.errors.APIError: If an error occurs during the network creation process.
     """
-    ipam_pool = docker.types.IPAMPool(
-        subnet=subnet_,
-        gateway=gateway_
-    )
-    ipam_config = docker.types.IPAMConfig(
-        pool_configs=[ipam_pool]
-    )
+    ipam_pool = docker.types.IPAMPool(subnet=subnet_, gateway=gateway_)
+    ipam_config = docker.types.IPAMConfig(pool_configs=[ipam_pool])
 
     # Create the network with IPAM configuration
-    return client.networks.create(name, driver="bridge", ipam=ipam_config, check_duplicate=True)
+    return client.networks.create(
+        name, driver="bridge", ipam=ipam_config, check_duplicate=True
+    )

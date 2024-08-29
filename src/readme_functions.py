@@ -9,6 +9,7 @@ The main functionality includes:
 Functions:
 - write_readme_for_ovpn_connection(location, subnet, containers): Writes a README.md file to the specified location with details about connecting to the subnet and reachable container IP addresses.
 """
+
 import os
 
 
@@ -37,7 +38,9 @@ def write_readme_for_ovpn_connection(location, subnet, containers):
 
     - {subnet}.1
     - {subnet}.2
-    """.strip().format(subnet=subnet)
+    """.strip().format(
+        subnet=subnet
+    )
 
     # Add the reachable container IP addresses based on the length of the containers list
     for i in range(1, len(containers) + 1):
@@ -49,7 +52,7 @@ def write_readme_for_ovpn_connection(location, subnet, containers):
     # Write the README.md file to the specified location
     readme_file_path = os.path.join(location, "README.md")
     try:
-        with open(readme_file_path, 'w') as readme_file:
+        with open(readme_file_path, "w") as readme_file:
             readme_file.write(readme_content.strip())
     except OSError as e:
         print(f"Error writing README.md file: {e}")

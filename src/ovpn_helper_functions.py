@@ -14,10 +14,19 @@ import time
 
 class DownloadError(Exception):
     """Custom exception for download errors."""
+
     pass
 
 
-def curl_client_ovpn_file_version(container, host_address, user_name, counter, save_path, max_retries_counter=0, max_retries=10):
+def curl_client_ovpn_file_version(
+    container,
+    host_address,
+    user_name,
+    counter,
+    save_path,
+    max_retries_counter=0,
+    max_retries=10,
+):
     """
     Downloads a .conf version of the client OpenVPN configuration file from a specified URL with retry logic.
 
@@ -40,8 +49,7 @@ def curl_client_ovpn_file_version(container, host_address, user_name, counter, s
         while max_retries_counter < max_retries:
             try:
                 subprocess.run(command, shell=True, check=True)
-                print(
-                    f"File downloaded successfully to {save_directory}/client.ovpn")
+                print(f"File downloaded successfully to {save_directory}/client.ovpn")
                 return
             except subprocess.CalledProcessError:
                 max_retries_counter += 1
@@ -76,7 +84,7 @@ def modify_ovpn_file(file_path, new_port, new_route_ip):
 
     modified_lines = []
 
-    with open(file_path, 'r') as file:
+    with open(file_path, "r") as file:
         lines = file.readlines()
 
     remote_line_found = False
@@ -102,7 +110,7 @@ def modify_ovpn_file(file_path, new_port, new_route_ip):
         print("No 'remote' line found in the file.")
         return
 
-    with open(file_path, 'w') as file:
+    with open(file_path, "w") as file:
         file.writelines(modified_lines)
 
 
@@ -126,7 +134,7 @@ def modify_ovpn_file_change_host(file_path, new_ip, new_port, username):
 
     modified_lines = []
 
-    with open(file_path, 'r') as file:
+    with open(file_path, "r") as file:
         lines = file.readlines()
 
     remote_line_found = False
@@ -154,12 +162,14 @@ def modify_ovpn_file_change_host(file_path, new_ip, new_port, username):
         return None
 
     if change_needed:
-        with open(file_path, 'w') as file:
+        with open(file_path, "w") as file:
             file.writelines(modified_lines)
         print(
-            f"IP address and port in the 'remote' line of {file_path} have been successfully modified.")
+            f"IP address and port in the 'remote' line of {file_path} have been successfully modified."
+        )
         return username
     else:
         print(
-            f"No change needed for {username}. The IP address and port are already correct.")
+            f"No change needed for {username}. The IP address and port are already correct."
+        )
         return None
