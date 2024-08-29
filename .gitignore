@@ -7,6 +7,7 @@ __pycache__/
 src/ssh_connection.py
 src/test2.yaml
 src/ctf_main_copy.py
+src/'ctf_main _copy'
 
 # Ignore the for_me directory
 for_me/
