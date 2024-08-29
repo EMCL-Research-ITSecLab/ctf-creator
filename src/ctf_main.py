@@ -41,9 +41,8 @@ import hosts_functions as hosts_func
 import validation_functions as valid
 from docker.errors import NotFound, APIError
 
+
 # Click for reading data from the terminal
-
-
 @click.command()
 @click.option(
     "--config",
@@ -131,7 +130,7 @@ def main(config, save_path):
             for command in commands:
                 result = subprocess.run(command, shell=True, executable="/bin/bash")
                 if result.returncode != 0:
-                    print(f"Error executing command: {command}")
+                    click.echo(f"Error executing command: {command}")
                     break
         except Exception as e:
             raise RuntimeError(f"An unexpected error occurred: {e}")
@@ -160,7 +159,7 @@ def main(config, save_path):
                         item.stop()
                         item.remove(force=True)
                     except NotFound:
-                        print(
+                        click.echo(
                             f"Container {item.id} not found. It might have been removed already. But it is ok."
                         )
                 # Delete all docker networks
@@ -284,15 +283,15 @@ def main(config, save_path):
                         hosts, current_host
                     )
                 if existing_host_ip in extracted_hosts:
-                    print(
+                    click.echo(
                         f"The remote host {existing_host_ip} in the already generated client.ovpn is existing. Everything is fine!"
                     )
                 else:
                     # 4th use case changed remote host in yaml config
-                    print(
+                    click.echo(
                         f"The remote host {existing_host_ip} in the old client.ovpn is not existing anymore."
                     )
-                    print(
+                    click.echo(
                         f"The generated client.ovpn for {user_name} gets changed locally. Please inform {user_name} and give him the new client.ovpn"
                     )
                     # Existing host is not existing anymore so change it into the current on from the loop iteration
@@ -353,7 +352,7 @@ def main(config, save_path):
             click.echo("The following users had their OVPN files changed:")
             for user in new_changed_ovpn_files_users:
                 click.echo(user)
-        print("Done.")
+        click.echo("Done.")
     except FileNotFoundError:
         click.echo("Error: The specified file was not found.")
     except yaml.YAMLError as exc:
