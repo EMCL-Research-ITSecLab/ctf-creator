@@ -39,7 +39,8 @@ hosts:
   - ubuntu@10.20.30.101
   - ubuntu@10.20.30.102
   - ubuntu@10.20.30.103
- # - ubuntu@10.20.30.104
+  - ubuntu@10.20.30.104
+  - ubuntu@10.20.30.105
 
 
 # IP Adress: firstpart.xx.xx.xx/24

@@ -1,16 +1,15 @@
+from unittest.mock import patch, MagicMock, mock_open
+from src.ctf_main import main
+from click.testing import CliRunner
 import pytest
 import sys
 import os
 import yaml
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
-from unittest.mock import patch, MagicMock,mock_open
-from click.testing import CliRunner
-from src.ctf_main import main
-from click.testing import CliRunner
+sys.path.insert(0, os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '../../src')))
 
 
-#!!! Not finished add more test cases like 1-2 
-
+#!!! Not finished add more test cases like 1-2
 
 
 # @patch('src.ctf_main.yaml.safe_load')
@@ -163,9 +162,10 @@ from click.testing import CliRunner
 #     assert mock_check_ping.call_count == 1
 
 
-
-@patch('os.path.exists', return_value=True)  # Mock os.path.exists to return True
-@patch('os.path.isfile', return_value=True)  # Mock os.path.isfile to return True
+# Mock os.path.exists to return True
+@patch('os.path.exists', return_value=True)
+# Mock os.path.isfile to return True
+@patch('os.path.isfile', return_value=True)
 @patch('src.ctf_main.yaml.safe_load')
 @patch('src.ctf_main.subprocess.run', return_value=MagicMock(returncode=1))
 @patch('src.ctf_main.open', create=True)
@@ -186,6 +186,7 @@ def test_main_ping_error(mock_open, mock_run, mock_safe_load, mock_isfile, mock_
     }
 
     runner = CliRunner()
-    result = runner.invoke(main, ['--config', 'fake_path.yaml', '--save_path', '/fake_save_path'])
+    result = runner.invoke(
+        main, ['--config', 'fake_path.yaml', '--save_path', '/fake_save_path'])
 
     assert result.exit_code == 1, f"Unexpected exit code: {result.exit_code}\nOutput: {result.output}"

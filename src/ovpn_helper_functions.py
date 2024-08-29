@@ -17,7 +17,6 @@ class DownloadError(Exception):
     pass
 
 
-
 def curl_client_ovpn_file_version(container, host_address, user_name, counter, save_path, max_retries_counter=0, max_retries=10):
     """
     Downloads a .conf version of the client OpenVPN configuration file from a specified URL with retry logic.
@@ -37,11 +36,12 @@ def curl_client_ovpn_file_version(container, host_address, user_name, counter, s
     try:
         os.makedirs(save_directory, exist_ok=True)
         command = f"curl -o {save_directory}/client.ovpn {url}"
-        
+
         while max_retries_counter < max_retries:
             try:
                 subprocess.run(command, shell=True, check=True)
-                print(f"File downloaded successfully to {save_directory}/client.ovpn")
+                print(
+                    f"File downloaded successfully to {save_directory}/client.ovpn")
                 return
             except subprocess.CalledProcessError:
                 max_retries_counter += 1
@@ -59,7 +59,6 @@ def curl_client_ovpn_file_version(container, host_address, user_name, counter, s
     except Exception as e:
         print(f"Error: An unexpected error occurred - {e}")
         raise DownloadError(f"An unexpected error occurred - {e}")
-
 
 
 def modify_ovpn_file(file_path, new_port, new_route_ip):
@@ -81,8 +80,7 @@ def modify_ovpn_file(file_path, new_port, new_route_ip):
         lines = file.readlines()
 
     remote_line_found = False
-   
-    
+
     for line in lines:
         if line.startswith("remote "):
             parts = line.split()
@@ -100,16 +98,12 @@ def modify_ovpn_file(file_path, new_port, new_route_ip):
         else:
             modified_lines.append(line)
 
-    
     if not remote_line_found:
         print("No 'remote' line found in the file.")
         return
 
     with open(file_path, 'w') as file:
         file.writelines(modified_lines)
-    
-
-
 
 
 def modify_ovpn_file_change_host(file_path, new_ip, new_port, username):
@@ -152,7 +146,7 @@ def modify_ovpn_file_change_host(file_path, new_ip, new_port, username):
                     change_needed = True
 
                 remote_line_found = True
-        
+
         modified_lines.append(line)
 
     if not remote_line_found:
@@ -162,8 +156,10 @@ def modify_ovpn_file_change_host(file_path, new_ip, new_port, username):
     if change_needed:
         with open(file_path, 'w') as file:
             file.writelines(modified_lines)
-        print(f"IP address and port in the 'remote' line of {file_path} have been successfully modified.")
+        print(
+            f"IP address and port in the 'remote' line of {file_path} have been successfully modified.")
         return username
     else:
-        print(f"No change needed for {username}. The IP address and port are already correct.")
+        print(
+            f"No change needed for {username}. The IP address and port are already correct.")
         return None

@@ -5,6 +5,8 @@ __pycache__/
 
 # Ignore ssh_connection.py in the src directory
 src/ssh_connection.py
+src/test2.yaml
+src/ctf_main_copy.py
 
 # Ignore the for_me directory
 for_me/

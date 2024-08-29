@@ -38,9 +38,9 @@ def read_data_from_yaml(data):
     Raises:
         ValueError: If any required fields are missing, not lists, or contain invalid values.
     """
-    required_fields = ['containers', 'users', 'identityFile', 'hosts', 
+    required_fields = ['containers', 'users', 'identityFile', 'hosts',
                        'subnet_first_part', 'subnet_second_part', 'subnet_third_part']
-    
+
     for field in required_fields:
         if field not in data:
             raise ValueError(f"Missing {field} field in YAML data")
@@ -64,7 +64,7 @@ def read_data_from_yaml(data):
                                     ('subnet_third_part', subnet_third_part)]:
         if not isinstance(field_value, list):
             raise ValueError(f"Expected '{field_name}' to be a list")
-    
+
     # Ensure lists are not empty
     if not containers:
         raise ValueError("Expected 'containers' to be a non-empty list")
@@ -77,7 +77,8 @@ def read_data_from_yaml(data):
     if not subnet_first_part:
         raise ValueError("Expected 'subnet_first_part' to be a non-empty list")
     if not subnet_second_part:
-        raise ValueError("Expected 'subnet_second_part' to be a non-empty list")
+        raise ValueError(
+            "Expected 'subnet_second_part' to be a non-empty list")
     if not subnet_third_part:
         raise ValueError("Expected 'subnet_third_part' to be a non-empty list")
 
@@ -86,13 +87,15 @@ def read_data_from_yaml(data):
                                        ('subnet_second_part', subnet_second_part),
                                        ('subnet_third_part', subnet_third_part)]:
         if len(subnet_value) != 1:
-            raise ValueError(f"Expected '{subnet_field}' to contain exactly one value")
-        
+            raise ValueError(
+                f"Expected '{subnet_field}' to contain exactly one value")
+
         try:
             subnet_value[0] = int(subnet_value[0])
         except ValueError:
-            raise ValueError(f"Expected '{subnet_field}' to contain an integer value")
-        
+            raise ValueError(
+                f"Expected '{subnet_field}' to contain an integer value")
+
      # Ensure lists are not empty
     if not containers:
         raise ValueError("Expected 'containers' to be a non-empty list")
@@ -107,7 +110,8 @@ def read_data_from_yaml(data):
     host_pattern = re.compile(r'^[\w._-]+@\d{1,3}(?:\.\d{1,3}){3}$')
     for host in hosts:
         if not host_pattern.match(host):
-            raise ValueError(f"Expected 'hosts' entries to be in the format 'username@ip_address', but got '{host}'")
+            raise ValueError(
+                f"Expected 'hosts' entries to be in the format 'username@ip_address', but got '{host}'")
 
     # Convert singular values to lists if needed
     containers = containers if isinstance(containers, list) else [containers]
@@ -118,7 +122,7 @@ def read_data_from_yaml(data):
     subnet_first_part = subnet_first_part[0]
     subnet_second_part = subnet_second_part[0]
     subnet_third_part = subnet_third_part[0]
- 
+
     return containers, users, key, hosts, subnet_first_part, subnet_second_part, subnet_third_part
 
 
@@ -139,13 +143,14 @@ def extract_hosts(hosts):
     for host in hosts:
         if not host:
             raise ValueError("Host string cannot be empty")
-        
+
         parts = host.split('@')
         if len(parts) != 2:
-            raise ValueError(f"Host string must contain exactly one '@' symbol, but got: '{host}'")
-        
+            raise ValueError(
+                f"Host string must contain exactly one '@' symbol, but got: '{host}'")
+
         extracted_hosts.append(parts[1])
-    
+
     return extracted_hosts
 
 
@@ -166,9 +171,9 @@ def extract_host_usernames(hosts):
     for host in hosts:
         if not host:
             raise ValueError("Empty string provided in hosts list")
-        
+
         parts = host.split('@')
-        
+
         if len(parts) != 2:
             raise ValueError(f"Invalid host format: '{host}'")
 
@@ -176,6 +181,7 @@ def extract_host_usernames(hosts):
         extracted_usernames.append(extracted_username)
 
     return extracted_usernames
+
 
 def find_host_username_by_ip(hosts, existing_host_ip):
     """
@@ -193,6 +199,7 @@ def find_host_username_by_ip(hosts, existing_host_ip):
         username, ip_address = host.split('@')
         if ip_address == existing_host_ip:
             return username
-    
-    print(f"Warning: The IP address {existing_host_ip} in the client.ovpn is not defined in the YAML configuration for the CTF-Creator.")
+
+    print(
+        f"Warning: The IP address {existing_host_ip} in the client.ovpn is not defined in the YAML configuration for the CTF-Creator.")
     return None
