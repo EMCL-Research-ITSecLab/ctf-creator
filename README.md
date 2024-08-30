@@ -38,30 +38,32 @@ source .venv/bin/activate
 ## Requirements 
 Provide a YAML configuration file with the following arguments:
 
--     name: Name of the YAML configuration (e.g., my_config).
--     containers: Docker containers that get started for each user in a specific subnet isolated from other users (e.g., nginx:latest).
--     users: List of users of the CTF environment created by the CTF-Creator.
--     identityFile: Path to the private SSH keys for host logins.
--     hosts: Hosts where the Docker containers for the CTF environment are running. Entries should start with the host username, followed by @, and then the IP address of the host (e.g., ubuntu@10.20.30.101).
--     subnet_first_part: First segment of the subnet IP address (e.g., 10 in 10.xx.xx.xx/24).
--     subnet_second_part: Second segment of the subnet IP address. (e.g., 13 in xx.13.xx.xx/24).
--     subnet_third_part: Third segment of the subnet IP address (e.g., 0 in xx.xx.0.xx/24).
+    -     `name`: Name of the YAML configuration (e.g., my_config).
+    -     `containers`: Docker containers that get started for each user in a specific subnet isolated from other users (e.g., nginx:latest).
+    -     `users`: List of users of the CTF environment created by the CTF-Creator.
+    -     `identityFile`: Path to the private SSH keys for host logins.
+    -     `hosts`: Hosts where the Docker containers for the CTF environment are running. Entries should start with the host username, followed by @, and then the IP address of the host (e.g., ubuntu@10.20.30.101).
+    -     `subnet_first_part`: First segment of the subnet IP address (e.g., 10 in 10.xx.xx.xx/24).
+    -     `subnet_second_part`: Second segment of the subnet IP address. (e.g., 13 in xx.13.xx.xx/24).
+    -     `subnet_third_part`: Third segment of the subnet IP address (e.g., 0 in xx.xx.0.xx/24).
+   
+    An example YAML config file named test.yaml is available in the src directory to illustrate the required structure.
 
-### Requirements for the remote hosts specified in the YAML configuration 
-
+### Requirements for the remote hosts that are specified in the YAML configuration 
+The hosts need to be capable of spawning Docker containers. For that please follow the instructions: 
 1. You need to install [Docker](https://docs.docker.com/engine/install/ubuntu/)
 2. You need to configure [remote access Docker daemon](https://docs.docker.com/engine/daemon/remote-access/)
 3. You need to be able to use Docker without privilaged Access run follwoing comand in the terminal of the remote hosts ```
 sudo usermod -aG docker $(whoami) && newgrp docker  ```      
 
-
+The hosts need to support SSH connections using asymmetric public and private keys for secure remote access.
 
 ## Usage
-Run ctf_main.py with Python 3 in the src folder.
+Run ctf_main.py with Python 3 in the src folder on your system.
 
-Provide the location of your YAML configuration file and where you want to store the created data for the connection to the CTF environment.
+Provide the location of your YAML configuration file and where you want to store the created data for the connection to the CTF environment on your device.
 
-For connecting to the hosts, it will also ask for your terminal password.
+Due to the use of an SSH agent for the Connection to the hosts, you will also be prompted to enter your terminal password.
 
 ## Testing
 To run all tests at once you can run this command in the terminal in the main folder `ctf-creator/`:
@@ -73,38 +75,19 @@ python3 -m pytest -v
 
 #### Main Function Overview
 
-The main function orchestrates the entire setup process for the CTF-Creator, leveraging various helper functions and external libraries like Docker, Paramiko (SSH), and Click (command-line interface).
+The main function orchestrates the entire setup process for the CTF-Creator, using various helper functions and external libraries like Docker, Paramiko (SSH), and Click (command-line interface).
 Key Functionalities:
-
-    Loading Configuration:
-        Reads and parses a YAML configuration file (config.yaml) that defines:
-            Docker containers to be started for each user.
-            Users participating in the CTF.
-            Paths to SSH keys, WireGuard configurations, and other network details.
-            Hosts where Docker containers will run.
-            IP address subnets for network configuration.
-
-    Establishing Connections:
-        Sets up SSH connections using Paramiko and WireGuard connections as defined in the configuration.
-        Manages SSH agent for key-based authentication during operations.
-
-    Network and Container Management:
-        Cleans up existing Docker containers and networks on specified hosts to ensure a clean state.
-        Creates Docker networks for each user, ensuring isolated environments for containers.
-        Deploys specified Docker containers for each user within their respective networks.
-
-    Security and Configuration:
-        Handles security configurations like setting up WireGuard VPN for secure connections to Docker hosts.
-        Manages user-specific OpenVPN servers and configuration files for secure client-server communication within the CTF environment.
-
-    Error Handling and Retry Mechanism:
-        Implements error handling and retry mechanisms (via max_retries parameter) for critical operations like file downloads (using curl) and configuration modifications.
-        Ensures robustness and reliability during setup and configuration phases.
-
-    Output and Logging:
-        Provides informative messages using click.echo to keep users informed about the progress and status of operations.
-        Logs errors and exceptions to aid in debugging and troubleshooting.
-
+        1.    YAML Configuration Parsing:
+        2.    SSH Connection Initialization: 
+        3.    Host Reachability and SSH Connectivity Check:
+        4.    Cleanup of Existing Docker Containers and Networks:
+        5.    Subnet Calculation and Network Setup:
+        6.    OpenVPN Server Setup:
+        7.    OpenVPN Configuration Management: 
+        8.    Docker Container Deployment:
+        9.    Documentation and Output Generation:
+        10.   Error Handling and Logging:
+        
 ## Credits
 
 This is the CTF-Creator programmed by Nick Nötzel under the supervision of Stefan Machmeier.
