@@ -49,8 +49,8 @@ Provide a YAML configuration file with the following arguments:
 
 ### Requirements for the remote hosts specified in the YAML configuration 
 
-1. You need to install [Docker] (https://docs.docker.com/engine/install/ubuntu/)
-2. You need to configure [remote access Docker daemon] (https://docs.docker.com/engine/daemon/remote-access/)
+1. You need to install [Docker](https://docs.docker.com/engine/install/ubuntu/)
+2. You need to configure [remote access Docker daemon](https://docs.docker.com/engine/daemon/remote-access/)
 3.         
 
 
