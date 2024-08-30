@@ -85,8 +85,5 @@ Key Functionalities:
 
 This is the CTF-Creator programmed by Nick Nötzel under the supervision of Stefan Machmeier.
 ## License
-
-## Questions
-
-If you have questions regarding the program, you can contact me via my university email.
+EUROPEAN UNION PUBLIC LICENCE. Take a look at the LICENSE.md
 
