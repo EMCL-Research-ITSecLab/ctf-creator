@@ -51,7 +51,7 @@ Provide a YAML configuration file with the following arguments:
 
 1. You need to install [Docker](https://docs.docker.com/engine/install/ubuntu/)
 2. You need to configure [remote access Docker daemon](https://docs.docker.com/engine/daemon/remote-access/)
-3. You need to be able to use Docker without privilaged Access run follwoing comand ```bash
+3. You need to be able to use Docker without privilaged Access run follwoing comand in the terminal of the remote hosts ```
 sudo usermod -aG docker $(whoami) && newgrp docker  ```      
 
 
