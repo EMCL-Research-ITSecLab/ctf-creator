@@ -13,7 +13,7 @@ The project consists of three folders:
     - `pyyaml_functions.py'`
     - `hosts_functions.py`
     - `ovpn_helper_functions.py`
-    - `pyyaml_fucntions.py`
+    - `pyyaml_functions.py`
     - `readme_functions.py`
     - `validation_functions.py`
     - `test.yaml` : YAML Configuration file
