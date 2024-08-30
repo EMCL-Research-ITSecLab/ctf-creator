@@ -1,16 +1,16 @@
 # CTF-Creator
 
-The main function of the CTF-Creator aims to automate the setup of a CTF environment by managing Docker containers, networking, and security configurations. It streamlines the process of provisioning resources for multiple users, ensuring each participant has a dedicated and secure environment tailored to the CTF requirements and creating OVPN files for a secure connection with the CTF environment.
+The Capture-The-Flag (CTF)-Creator is a Python-based project designed to automate the setup of a CTF environment by managing Docker containers, networking, and security configurations. It simplifies the process of provisioning resources for multiple users, ensuring each participant has a dedicated and secure environment tailored to the CTF requirements and creating OpenVPN files for a secure connection with the CTF environment.
 
-By integrating with Docker, SSH, and networking tools, the main function facilitates the creation of isolated environments where participants can engage in challenges, exercises, or simulations typical of Capture The Flag competitions. This automation not only saves time but also enhances the scalability and consistency of CTF environments across different hosts and setups.
+By integrating with Docker, SSH, and networking tools, the main function facilitates the creation of isolated environments where participants can engage in challenges, exercises, or simulations typical of CTF competitions. This automation not only saves time but also enhances the scalability and consistency of CTF environments across different hosts and setups.
 
 ## Folders and Files
 
 The project consists of three folders:
 1. **src**: Where all relevant files and scripts are:
-    - `ctf_main.py`
-    - `docker_functions.py`
-    - `pyyaml_functions.py`
+    - 'ctf_main.py'
+    - 'docker_functions.py'
+    - 'pyyaml_functions.py'
     - `tar_functions.py`
     - `ovpn_helper_functions.py`
 2. **unused_bib**: A folder where all functions are stored which were used at some point during development but are no longer necessary:
