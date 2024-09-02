@@ -5,8 +5,10 @@ import os
 import tempfile
 import yaml
 import sys
-sys.path.insert(0, os.path.abspath(
-    os.path.join(os.path.dirname(__file__), '../../src')))
+
+sys.path.insert(
+    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../src"))
+)
 
 
 def test_validate_save_path_valid_directory():
@@ -19,7 +21,7 @@ def test_validate_save_path_valid_directory():
 def test_validate_save_path_non_existent_directory():
     # Create a temporary directory and a non-existent subdirectory
     with tempfile.TemporaryDirectory() as tmpdirname:
-        non_existent_path = os.path.join(tmpdirname, 'non_existent')
+        non_existent_path = os.path.join(tmpdirname, "non_existent")
         result = validate_save_path(None, None, non_existent_path)
         assert result == non_existent_path
         assert os.path.isdir(non_existent_path)

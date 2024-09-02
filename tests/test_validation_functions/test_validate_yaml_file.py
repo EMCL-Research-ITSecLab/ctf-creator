@@ -8,7 +8,7 @@ from src.validation_functions import validate_yaml_file
 
 def test_validate_yaml_file_valid_yaml():
     # Create a temporary YAML file in text mode
-    with tempfile.NamedTemporaryFile(suffix=".yaml", mode='w', delete=False) as tmpfile:
+    with tempfile.NamedTemporaryFile(suffix=".yaml", mode="w", delete=False) as tmpfile:
         yaml.dump({"key": "value"}, tmpfile)
         tmpfile_name = tmpfile.name  # Store the file name before closing
 
