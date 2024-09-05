@@ -152,7 +152,6 @@ def main(config, save_path):
                 docker_client = docker.DockerClient(base_url=f"ssh://{host}")
                 docker_client.containers.prune()
                 # Stop all containers and remove them.
-                #!!! Bug if you want to remove a container which deletes itself or got forced deleted manually
                 for item in docker_client.containers.list(ignore_removed=True):
                     try:
                         docker_client.containers.prune()
@@ -228,7 +227,6 @@ def main(config, save_path):
                     base_url=f"ssh://{hosts[current_vm-1]}"
                 )
                 current_host = extracted_hosts[current_vm - 1]
-            # !!! here is the og line! doc.create_network(docker_client,network_name,subnet,gateway)
             # 1st use case
             # Create Open VPN Server if save data for user is not existing!
             local_save_path_to_user = f"{save_path}/data/{user_name}"
