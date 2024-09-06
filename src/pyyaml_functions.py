@@ -16,27 +16,40 @@ Functions:
 """
 
 import re
+import docker_functions as doc_func
 
 
 def read_data_from_yaml(data):
     """
     Validates and extracts configuration data from a provided dictionary.
 
+    This function ensures that all required fields are present, correctly formatted,
+    and contain valid values. It also converts specific subnet values to integers
+    and validates that the hosts are in the correct format.
+
     Args:
-        data (dict): Configuration data.
+        data (dict): Configuration data expected to contain the following keys:
+            - "containers": List of Docker container names.
+            - "users": List of user names.
+            - "identityFile": Path to the private SSH key used for host login.
+            - "hosts": List of host addresses where the Docker containers will run.
+            - "subnet_first_part": The first part of the subnet IP address as a list containing one string.
+            - "subnet_second_part": The second part of the subnet IP address as a list containing one string.
+            - "subnet_third_part": The third part of the subnet IP address as a list containing one string.
 
     Returns:
         tuple: A tuple containing:
             - containers (list): List of Docker containers to be started for each user.
             - users (list): List of users.
-            - key (str): Path to the private SSH key for host login.
+            - key (list): List containing the path to the private SSH key for host login.
             - hosts (list): List of hosts where the Docker containers are running.
-            - subnet_first_part (str): IP address segment formatted as firstpart.xx.xx.xx/24.
-            - subnet_second_part (str): IP address segment formatted as xx.second_part.xx.xx/24.
-            - subnet_third_part (str): IP address segment formatted as xx.xx.third_part.xx/24.
+            - subnet_first_part (int): First part of the subnet IP address.
+            - subnet_second_part (int): Second part of the subnet IP address.
+            - subnet_third_part (int): Third part of the subnet IP address.
 
     Raises:
-        ValueError: If any required fields are missing, not lists, or contain invalid values.
+        ValueError: If any required fields are missing, not lists, contain invalid values,
+                    or if host addresses do not match the 'username@ip_address' format.
     """
     required_fields = [
         "containers",
@@ -121,6 +134,9 @@ def read_data_from_yaml(data):
             raise ValueError(
                 f"Expected 'hosts' entries to be in the format 'username@ip_address', but got '{host}'"
             )
+
+    for container in containers:
+        doc_func.check_image_existence(container)
 
     # Convert singular values to lists if needed
     containers = containers if isinstance(containers, list) else [containers]

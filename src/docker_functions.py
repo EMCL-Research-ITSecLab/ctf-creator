@@ -1,19 +1,21 @@
 """
 This module provides functionalities for managing Docker containers and networks,
-as well as configuring OpenVPN servers.
+as well as setting up and configuring OpenVPN servers.
 
 The primary functionalities include:
 1. Creating Docker containers with specific static IP addresses.
 2. Setting up and configuring OpenVPN servers.
 3. Generating OpenVPN configuration files for users.
 4. Creating Docker networks with IPAM configurations.
+5. Checking the existence of Docker images locally or in a remote registry.
 
 Functions:
 - create_container(client, network_name, name, image, static_address): Creates a Docker container with a specified name, image, and static IP address.
 - create_openvpn_server(client, network_name, name, static_address, counter, host_address): Creates an OpenVPN server container with specified configurations.
-- create_openvpn_server_with_existing_data(client, network_name, name, static_address, counter, host_address, remote_path_to_mount): Creates an OpenVPN server container using existing data.
-- create_network(client, name, subnet_, gateway_): Creates a Docker network with IPAM configuration.
-- create_openvpn_config(client, user_name, counter, host_address, save_path, new_push_route): Generates an OpenVPN configuration for a specified user.
+- create_openvpn_server_with_existing_data(client, network_name, name, static_address, port_number, host_address, remote_path_to_mount): Creates an OpenVPN server container using existing data with specified configurations.
+- create_openvpn_config(client, user_name, counter, host_address, save_path, new_push_route): Generates an OpenVPN configuration for a specified user and saves it to a specified path.
+- create_network(client, name, subnet_, gateway_): Creates a Docker network with a specified name, subnet, and gateway using IPAM configuration.
+- check_image_existence(image_name): Checks if a Docker image exists locally or in a remote registry and attempts to pull it if not found locally.
 """
 
 import docker
@@ -23,6 +25,7 @@ from docker.models.networks import Network
 import os
 import ovpn_helper_functions as ovpn_func
 import time
+import docker
 
 
 def create_container(client, network_name, name, image, static_address):
@@ -241,3 +244,38 @@ def create_network(client, name, subnet_, gateway_):
     return client.networks.create(
         name, driver="bridge", ipam=ipam_config, check_duplicate=True
     )
+
+
+def check_image_existence(image_name):
+    """Checks if a Docker image exists in a remote registry using the Docker SDK for Python.
+    Otherwise it checks if this image can be pulled.
+
+    Args:
+        image_name (str): The name of the image to check.
+
+    Returns:
+        bool: True if the image exists, False otherwise.
+
+    Raises:
+        docker.errors.ImageNotFound: If the image is not found in the remote registry.
+    """
+
+    try:
+        local_client = docker.from_env()
+        # Split image name into name and version if a colon is present
+
+        # Attempt to inspect the image locally
+        local_client.images.get(f"{image_name}")
+        print(f"Image {image_name} exists locally.")
+        return True
+    except docker.errors.ImageNotFound:
+        # If the image is not local, try to pull it
+        try:
+            print(f"Try to pull Image {image_name}. Could take some time.")
+            local_client.images.pull(f"{image_name}")
+            print(f"Image {image_name} pulled successfully.")
+            return True
+        except docker.errors.ImageNotFound:
+            raise docker.errors.ImageNotFound(
+                f"Error: Image {image_name} could not be pulled. Does this Docker Image exist?"
+            )
