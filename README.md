@@ -58,7 +58,7 @@ Provide a **save path** where user data will be saved or is already saved:
 Sufficient memory space and the necessary system permissions are required to save the configuration files for each CTF environment user on the system running the CTF-Creator. The amount of space needed will depend on the number of users in the CTF environment, with an estimated space requirement of 140 KB per user.
 
 ### Requirements for the remote hosts that are specified in the YAML configuration 
-The hosts need to be capable of spawning Docker containers. For that please follow the instructions: 
+**The hosts need to be capable of spawning Docker containers. For that please follow the instructions**: 
 1. You need to install [Docker](https://docs.docker.com/engine/install/ubuntu/)
 2. You need to configure [remote access Docker daemon](https://docs.docker.com/engine/daemon/remote-access/)
 3. You need to be able to use Docker without privilaged Access run follwoing comand in the terminal of the remote hosts ```
