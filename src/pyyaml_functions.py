@@ -1,18 +1,21 @@
 """
-This module provides functionalities for the CTF-Creator,
-including reading and validating configuration data from a YAML file,
-and extracting relevant information for setting up Docker containers and network configurations.
+This module provides core functionalities for reading and validating configuration data
+from a YAML file and extracting relevant information for setting up Docker containers and
+network configurations in the CTF (Capture The Flag) environment.
 
-The main functionalities include:
-
-1. Validating required fields in the YAML configuration.
-2. Extracting and returning relevant data for setting up Docker containers.
-3. Extracting host parts and usernames from host strings.
+Key Features:
+1. Validation of YAML Configuration: Ensures that all required fields in the YAML configuration
+   are present, properly formatted, and contain valid values.
+2. Docker Setup Support: Extracts and returns necessary data to set up Docker containers for users
+   based on the configuration.
+3. Host String Manipulation: Extracts host information and user names from formatted host strings.
 
 Functions:
-- read_data_from_yaml(data): Validates and extracts configuration data from a provided dictionary.
-- extract_hosts(hosts): Extracts the host part from each string in a list of hosts.
-- extract_host_usernames(hosts): Extracts the username part from each string in a list of hosts.
+- `read_data_from_yaml(data)`: Validates and extracts configuration data from a provided dictionary.
+- `extract_hosts(hosts)`: Extracts the host IP addresses from each string in a list of hosts.
+- `find_host_username_by_ip(hosts, existing_host_ip)`: Finds and returns the username associated with a
+  given IP address from a list of host strings.
+  
 """
 
 import re
@@ -188,35 +191,6 @@ def extract_hosts(hosts):
     return extracted_hosts
 
 
-def extract_host_usernames(hosts):
-    """
-    Extracts the username part from each string in a list of hosts.
-
-    Args:
-        hosts (list): List of host strings, each containing exactly one '@' symbol.
-
-    Returns:
-        list: A list of extracted username parts.
-
-    Raises:
-        ValueError: If a host string does not contain exactly one '@' symbol or is empty.
-    """
-    extracted_usernames = []
-    for host in hosts:
-        if not host:
-            raise ValueError("Empty string provided in hosts list")
-
-        parts = host.split("@")
-
-        if len(parts) != 2:
-            raise ValueError(f"Invalid host format: '{host}'")
-
-        extracted_username = parts[0]
-        extracted_usernames.append(extracted_username)
-
-    return extracted_usernames
-
-
 def find_host_username_by_ip(hosts, existing_host_ip):
     """
     Finds the username associated with a given IP address from a list of host entries.
@@ -230,6 +204,11 @@ def find_host_username_by_ip(hosts, existing_host_ip):
 
     """
     for host in hosts:
+        parts = host.split("@")
+        if len(parts) != 2:
+            raise ValueError(
+                f"Host string must contain exactly one '@' symbol, but got: '{host}'"
+            )
         username, ip_address = host.split("@")
         if ip_address == existing_host_ip:
             return username

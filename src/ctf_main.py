@@ -108,7 +108,7 @@ def main(config, save_path):
         )
         # Extract Host Ip-Address from yaml file
         extracted_hosts = yaml_func.extract_hosts(hosts)
-        extracted_hosts_username = yaml_func.extract_host_usernames(hosts)
+        #!!! extracted_hosts_username = yaml_func.extract_host_usernames(hosts)
         try:
             hosts_func.check_host_reachability_with_ping(extracted_hosts)
         except Exception as e:
@@ -255,12 +255,6 @@ def main(config, save_path):
                     1194 + k,
                     new_push_route,
                 )
-                # Writes a readmefile which describes reachable docker containers
-                readme.write_readme_for_ovpn_connection(
-                    local_save_path_to_user,
-                    f"{subnet_first_part}.{subnet_second_part}.{subnet_base}",
-                    containers,
-                )
             # Starts OpenVPN-Container with existing data in save_path
             else:
                 # 2nd and 3rd use case
@@ -334,7 +328,12 @@ def main(config, save_path):
                 click.echo(
                     f"For {user_name } the OVPN Docker container is running and can be connected with the the existing data"
                 )
-
+            # Writes a readme file which describes reachable docker containers
+            readme.write_readme_for_ovpn_connection(
+                local_save_path_to_user,
+                f"{subnet_first_part}.{subnet_second_part}.{subnet_base}",
+                containers,
+            )
             # Create a container for each container in the list of containers.
             for i, element in enumerate(containers):
                 if ":" in element:

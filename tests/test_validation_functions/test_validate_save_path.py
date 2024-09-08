@@ -3,7 +3,6 @@ from click import BadParameter
 import pytest
 import os
 import tempfile
-import yaml
 import sys
 
 sys.path.insert(

@@ -21,7 +21,6 @@ Functions:
 import docker
 import docker.errors
 import docker.types
-from docker.models.networks import Network
 import os
 import ovpn_helper_functions as ovpn_func
 import time
