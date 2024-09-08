@@ -92,7 +92,7 @@ Key Functionalities.
         7.    OpenVPN Server Setup
         8.    OpenVPN Configuration Management
         9.    Docker Container Deployment
-        10.    Documentation and Output Generation
+        10.   Documentation and Output Generation
         11.   Error Handling and Logging
         
 ## Credits
