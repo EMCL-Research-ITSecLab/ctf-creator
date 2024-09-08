@@ -25,6 +25,8 @@ The project consists of three folders:
    - `README.md`: Explains how to use the client.ovpn file.
    - `dockovpn_data.tar`: Backup data for the OpenVPN server.
 
+# Getting Started
+
 ## Installation Instructions
 
 Python 3 and several Python libraries need to be installed. They can be installed with
@@ -38,6 +40,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 ## Requirements 
+### Input requirements
 Provide a YAML configuration file with the following arguments:
 
     -     `name`: Name of the YAML configuration (e.g., my_config).
@@ -50,6 +53,9 @@ Provide a YAML configuration file with the following arguments:
     -     `subnet_third_part`: Third segment of the subnet IP address (e.g., 0 in xx.xx.0.xx/24).
    
     An example YAML config file named test.yaml is available in the src directory to illustrate the required structure.
+Provide a **save path** where user data will be saved or is already saved:
+
+Sufficient memory space and the necessary system permissions are required to save the configuration files for each CTF environment user on the system running the CTF-Creator. The amount of space needed will depend on the number of users in the CTF environment, with an estimated space requirement of 140 KB per user.
 
 ### Requirements for the remote hosts that are specified in the YAML configuration 
 The hosts need to be capable of spawning Docker containers. For that please follow the instructions: 
@@ -69,6 +75,20 @@ python3 src/ctf-main.py
 Provide the location of your YAML configuration file and where you want to store the created data for the connection to the CTF environment on your device.
 
 Due to the use of an SSH agent for the Connection to the hosts, you will also be prompted to enter your terminal password.
+
+### Use Cases
+
+1. Fresh set up: Creating the Environment Without Reusing OVPN Data
+2. Reusing Existing OVPN Configurations Without Adding New Users: 
+3. Reusing Existing OVPN Configurations While Adding New Users
+4. Reusing Data While Modifying Hosts
+
+For use case 1 specify a save path with no existing data created by the CTF-Creator.
+For the use cases 2-4 specify a save path where user data already exists.
+
+For every use case, the list of deploying Docker containers can be changed. 
+
+For any other use case scenario please start a fresh set up.
 
 ## Testing
 To run all tests at once you can run this command in the terminal in the main folder `ctf-creator/`:
