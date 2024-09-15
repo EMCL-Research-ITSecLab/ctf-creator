@@ -192,7 +192,7 @@ def create_openvpn_config(
         # Delay to give time to run the command in the container
         time.sleep(5)
         ovpn_func.curl_client_ovpn_file_version(
-            container, host_address, user_name, counter, save_path
+            host_address, user_name, counter, save_path
         )
 
     except Exception as e:

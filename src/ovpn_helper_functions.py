@@ -19,7 +19,6 @@ class DownloadError(Exception):
 
 
 def curl_client_ovpn_file_version(
-    container,
     host_address,
     user_name,
     counter,
@@ -69,6 +68,12 @@ def curl_client_ovpn_file_version(
         raise DownloadError(f"An unexpected error occurred - {e}")
 
 
+class RemoteLineNotFoundError(Exception):
+    """Custom exception raised when no 'remote' line is found in the OpenVPN configuration file."""
+
+    pass
+
+
 def modify_ovpn_file(file_path, new_port, new_route_ip):
     """
     Modifies an OpenVPN configuration file to update the remote port and add specific route settings.
@@ -107,8 +112,7 @@ def modify_ovpn_file(file_path, new_port, new_route_ip):
             modified_lines.append(line)
 
     if not remote_line_found:
-        print("No 'remote' line found in the file.")
-        return
+        raise RemoteLineNotFoundError("No 'remote' line found in the file.")
 
     with open(file_path, "w") as file:
         file.writelines(modified_lines)
@@ -158,8 +162,7 @@ def modify_ovpn_file_change_host(file_path, new_ip, new_port, username):
         modified_lines.append(line)
 
     if not remote_line_found:
-        print("No 'remote' line found in the file.")
-        return None
+        raise RemoteLineNotFoundError("No 'remote' line found in the file.")
 
     if change_needed:
         with open(file_path, "w") as file:

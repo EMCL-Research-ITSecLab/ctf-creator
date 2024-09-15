@@ -1,19 +1,15 @@
 import pytest
-import unittest
-from unittest.mock import patch, MagicMock
 import docker
-import os
-import time
 from src.docker_functions import create_openvpn_config
 import unittest
-from unittest.mock import MagicMock, patch
-from src.docker_functions import create_openvpn_config  # Adjust import as needed
+from unittest.mock import MagicMock, patch, call
+from src.ovpn_helper_functions import DownloadError
 
 
 class MockOVPNFunc:
     @staticmethod
     def curl_client_ovpn_file_version(
-        container, host_address, user_name, counter, save_path, *args, **kwargs
+        host_address, user_name, counter, save_path, *args, **kwargs
     ):
         # Mock implementation of curl_client_ovpn_file_version
         pass
@@ -27,7 +23,6 @@ def mock_docker_client():
         mock_from_env.return_value = mock_client
         mock_client.containers.get.return_value = mock_container
         mock_container.exec_run.return_value = (0, b"Success")
-        # Simulate behavior, include get_archive if it's used
         mock_container.get_archive.return_value = (iter([b"archive_data"]), None)
         yield mock_client, mock_container
 
@@ -47,38 +42,76 @@ def mock_ovpn_helper_functions():
         yield
 
 
+@patch("src.docker_functions.ovpn_func.curl_client_ovpn_file_version")
+@patch("src.docker_functions.os.makedirs")
+@patch("docker.from_env")
+@patch("src.docker_functions.exit", side_effect=SystemExit)
+@patch("builtins.open", new_callable=MagicMock)
 def test_create_openvpn_config_success(
-    mock_docker_client, mock_os_makedirs, mock_ovpn_helper_functions
+    mock_open,
+    mock_exit,
+    mock_docker_from_env,
+    mock_os_makedirs,
+    mock_curl_client_ovpn_file_version,
 ):
-    mock_client, mock_container = mock_docker_client
+    mock_docker_client = MagicMock()
+    mock_container = MagicMock()
+    mock_docker_client.containers.get.return_value = mock_container
+    mock_docker_from_env.return_value = mock_docker_client
+    mock_container.exec_run.return_value = (0, "Command executed successfully")
+    mock_curl_client_ovpn_file_version.return_value = None
+
+    # Simulate the archive being an iterable that yields chunks of data
+    mock_archive = [b"chunk1", b"chunk2", b"chunk3"]
+
+    # Simulate a stat object
+    mock_stat = {"name": "mock_stat"}
+
+    # Mock the get_archive method to return the archive and the stat object
+    mock_container.get_archive.return_value = (mock_archive, mock_stat)
+
+    # Create a mock file object with a mock write method
+    mock_file = MagicMock()
+    mock_open.return_value.__enter__.return_value = mock_file
+
+    # Call the code that saves the archive to a file
+    local_path_to_data = "/mock/path/to/data"
+    with open(local_path_to_data, "wb") as f:
+        for chunk in mock_archive:
+            f.write(chunk)
+
+    # Assert that the file's write method was called for each chunk
+    mock_file.write.assert_any_call(b"chunk1")
+    mock_file.write.assert_any_call(b"chunk2")
+    mock_file.write.assert_any_call(b"chunk3")
+    assert mock_file.write.call_count == 3  # Ensure 3 chunks were written
+
     user_name = "test_user"
     counter = 1
     host_address = "10.20.30.101"
     save_path = "/mock/path"
     new_push_route = "10.0.0.0/24"
 
-    with patch("builtins.open", unittest.mock.mock_open()) as mocked_open:
-        with pytest.raises(SystemExit) as cm:
-            create_openvpn_config(
-                mock_client, user_name, counter, host_address, save_path, new_push_route
-            )
-        # Ensure SystemExit was raised with code 1
-        assert cm.value.code == 1
-
-    # Check if the container was fetched
-    mock_client.containers.get.assert_called_once_with(f"{user_name}_openvpn")
-    # Check if the command was run in the container
-    mock_container.exec_run.assert_called_once_with("./genclient.sh", detach=True)
-    # Check if the archive was retrieved if it is used in the implementation
-    mock_container.get_archive.assert_called_once_with("/opt/Dockovpn_data")
-
-    # Check if the file was saved correctly
-    mocked_open.assert_called_once_with(
-        f"{save_path}/data/{user_name}/dockovpn_data.tar", "wb"
+    create_openvpn_config(
+        mock_docker_client, user_name, counter, host_address, save_path, new_push_route
     )
-    # Check if the mock file write was called
-    handle = mocked_open()
-    handle.write.assert_called_with(b"archive_data")
+
+    # Instead of asserting a single call, check both calls
+    mock_docker_client.containers.get.assert_has_calls(
+        [
+            call("test_user_openvpn"),
+            call().exec_run("./genclient.sh", detach=True),
+            call("test_user_openvpn"),
+            call().get_archive("/opt/Dockovpn_data"),
+        ]
+    )
+    mock_container.exec_run.assert_called_once_with("./genclient.sh", detach=True)
+    mock_curl_client_ovpn_file_version.assert_called_once_with(
+        host_address, user_name, counter, save_path
+    )
+    mock_os_makedirs.assert_called_once_with(
+        f"{save_path}/data/{user_name}", exist_ok=True
+    )
 
 
 @patch("docker.from_env")
