@@ -4,7 +4,7 @@
 #
 # Arguments for the YAML file:
 #  - name: Name of the YAML config.
-#  - containers: Docker containers that get started for each user.
+#  - containers: Docker containers deployed for each user.
 #  - users: List of users.
 #  - identityFile: Path to the private SSH keys for host login.
 #  - hosts: Hosts where the Docker containers are running.
@@ -26,7 +26,7 @@ users:
   - mg235
   - qd109
   - lk543
-  -
+
 # For SSH Connection
 # Direction of your private SSH key
 identityFile:

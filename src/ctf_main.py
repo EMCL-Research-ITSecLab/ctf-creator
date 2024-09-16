@@ -5,7 +5,7 @@ To use this module, you need to provide a YAML configuration file with the follo
 
 Arguments for the YAML file:
   - name: Name of the YAML configuration.
-  - containers: Docker containers to be started for each user.
+  - containers: Docker containers deployed for each user.
   - users: List of users to be managed.
   - identityFile: Path to the private SSH key for host login.
   - hosts: List of hosts where the Docker containers are running.
@@ -15,11 +15,16 @@ Arguments for the YAML file:
 
 Functions:
   - main(): Main function of the CTF-Creator, which performs the following tasks:
-    1. Connects using SSH keys specified in the YAML file.
-    2. Cleans up existing Docker containers and networks on the specified hosts.
-    3. Creates Docker networks and OpenVPN configurations for each user.
-    4. Deploys Docker containers as specified in the YAML file.
-    5. Handles the creation and modification of OpenVPN configuration files.
+    1. YAML Configuration Parsing
+    2. SSH Connection Initialization
+    3. Host Reachability and SSH Connectivity Check
+    4. Cleanup of Existing Docker Containers and Networks
+    5. Subnet Calculation and Network Setup
+    6. OpenVPN Server Setup
+    7. OpenVPN Configuration Management
+    8. Docker Container Deployment
+    9. Documentation and Output Generation
+    10. Error Handling and Logging
 
 Args:
   - config: Path to the YAML configuration file.

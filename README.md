@@ -1,8 +1,8 @@
 # CTF-Creator
 
-The Capture-The-Flag (CTF)-Creator is a Python-based project designed to automate the setup of a CTF environment by managing Docker containers, networking, and security configurations. It simplifies the process of provisioning resources for multiple users, ensuring each participant has a dedicated and secure environment tailored to the CTF requirements and creating OpenVPN files for a secure connection with the CTF environment.
+The Capture-The-Flag (CTF)-Creator is a Python-based project designed to automate the setup of CTF environments by managing Docker containers, networking, and security configurations. It simplifies the process of provisioning resources for multiple users, ensuring each participant has a dedicated and secure environment tailored to specific CTF requirements, as well as creating OpenVPN files for secure connections to the CTF environment. 
 
-By integrating with Docker, SSH, and networking tools, the main function facilitates the creation of isolated environments where participants can engage in challenges, exercises, or simulations typical of CTF competitions. This automation not only saves time but also enhances the scalability and consistency of CTF environments across different hosts and setups.
+By integrating with Docker, SSH, and networking tools, the system automates the creation of isolated environments that include the necessary Docker containers responsible for the CTF setup. Once participants are connected to their respective environments, they can engage in challenges, exercises, or simulations typical of CTF competitions. This automation not only saves time but also enhances the scalability and consistency of CTF environments across different hosts and setups.
 
 ## Folders and Files
 
@@ -44,7 +44,7 @@ source .venv/bin/activate
 Provide a YAML configuration file with the following arguments:
 
     -     `name`: Name of the YAML configuration (e.g., my_config).
-    -     `containers`: Docker containers that get started for each user in a specific subnet isolated from other users (e.g., nginx:latest).
+    -     `containers`: Docker containers deployed for each user in a specific subnet isolated from other users (e.g., nginx:latest).
     -     `users`: List of users of the CTF environment created by the CTF-Creator.
     -     `identityFile`: Path to the private SSH keys for host logins.
     -     `hosts`: Hosts where the Docker containers for the CTF environment are running. Entries should start with the host username, followed by @, and then the IP address of the host (e.g., ubuntu@10.20.30.101).
@@ -100,20 +100,20 @@ python3 -m pytest -v
 
 #### Main Function Overview
 
-The main function orchestrates the entire setup process for the CTF-Creator, using various helper functions and external libraries like Docker, Paramiko (SSH), and Click (command-line interface).
-Key Functionalities.
+The main function of the CTF-Creator tool, located in src/ctf_main.py, serves as the core component responsible for setting up the entire CTF environment. It reads configurations from a YAML file, connects to specified hosts via SSH, and deploys Docker containers and networks uniformly across all hosts according to the provided specifications, utilizing various helper functions and external libraries such as Docker SDK, PyYAML, and Click. 
+
+Key Functionalities:
 
         1.    YAML Configuration Parsing
         2.    SSH Connection Initialization
         3.    Host Reachability and SSH Connectivity Check
         4.    Cleanup of Existing Docker Containers and Networks
         5.    Subnet Calculation and Network Setup
-        6.    Uniform Distribution of Users across Hosts
-        7.    OpenVPN Server Setup
-        8.    OpenVPN Configuration Management
-        9.    Docker Container Deployment
-        10.   Documentation and Output Generation
-        11.   Error Handling and Logging
+        6.    OpenVPN Server Setup
+        7.    OpenVPN Configuration Management
+        8.    Docker Container Deployment
+        9.   Documentation and Output Generation
+        10.   Error Handling and Logging
         
 ## Credits
 

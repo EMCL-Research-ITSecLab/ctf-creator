@@ -4,7 +4,6 @@ import docker
 from src.docker_functions import create_openvpn_server_with_existing_data
 
 
-# Mock everything related to docker and the create_openvpn_server_with_existing_data function
 @patch("docker.DockerClient")
 @patch("docker.types.EndpointConfig")
 def test_create_openvpn_server_with_existing_data(

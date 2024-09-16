@@ -8,12 +8,12 @@ Key Features:
    are present, properly formatted, and contain valid values.
 2. Docker Setup Support: Extracts and returns necessary data to set up Docker containers for users
    based on the configuration.
-3. Host String Manipulation: Extracts host information and user names from formatted host strings.
+3. Extracts host information and user names from formatted host strings.
 
 Functions:
-- `read_data_from_yaml(data)`: Validates and extracts configuration data from a provided dictionary.
-- `extract_hosts(hosts)`: Extracts the host IP addresses from each string in a list of hosts.
-- `find_host_username_by_ip(hosts, existing_host_ip)`: Finds and returns the username associated with a
+- read_data_from_yaml(data): Validates and extracts configuration data from a provided dictionary.
+- extract_hosts(hosts): Extracts the host IP addresses from each string in a list of hosts.
+- find_host_username_by_ip(hosts, existing_host_ip): Finds and returns the username associated with a
   given IP address from a list of host strings.
   
 """

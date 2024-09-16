@@ -5,11 +5,7 @@ import yaml
 from unittest import mock
 from click.testing import CliRunner
 from src.ctf_main import main
-from src.docker_functions import create_openvpn_config
-from src.ovpn_helper_functions import modify_ovpn_file
-import docker
-import src.hosts_functions
-import subprocess
+
 
 # Mock data for YAML file
 MOCK_YAML_DATA = {
@@ -118,20 +114,6 @@ def test_main_success(
     mock_subprocess_run.assert_called()
 
 
-# Additional test for handling YAML errors
-@mock.patch("yaml.safe_load", side_effect=yaml.YAMLError("Invalid YAML"))
-def test_main_yaml_error(mock_yaml_load, create_temp_save_path):
-    """Test the main function when a YAML error occurs."""
-    runner = CliRunner()
-    result = runner.invoke(
-        main, ["--config", "config.yaml", "--save_path", create_temp_save_path]
-    )
-
-    # Ensure that an error related to YAML is displayed
-    assert result.exit_code != 0
-    assert "does not exist" in result.output
-
-
 # Test for handling file not found error
 def test_main_file_not_found_error(create_temp_save_path):
     """Test the main function when the YAML file is not found."""
@@ -143,4 +125,4 @@ def test_main_file_not_found_error(create_temp_save_path):
 
     # Ensure the file not found error is handled
     assert result.exit_code != 0
-    assert "does not exist" in result.output
+    assert "'non_existing_file.yaml' does not exist" in result.output
