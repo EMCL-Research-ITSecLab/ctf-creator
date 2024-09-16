@@ -1,6 +1,6 @@
 # CTF-Creator
 
-The Capture-The-Flag (CTF)-Creator is a Python-based project designed to automate the setup of CTF environments by managing Docker containers, networking, and security configurations. It simplifies the process of provisioning resources for multiple users, ensuring each participant has a dedicated and secure environment tailored to specific CTF requirements, as well as creating OpenVPN files for secure connections to the CTF environment. 
+The Capture-The-Flag (CTF)-Creator is a Python-based project designed to automate the setup of CTF environments by managing Docker containers, networking, and security configurations. It simplifies the process of provisioning resources for multiple users, ensuring each participant has a dedicated and secure environment tailored to specific CTF requirements, as well as creating OpenVPN configuration files for secure connections to the CTF environment. 
 
 By integrating with Docker, SSH, and networking tools, the system automates the creation of isolated environments that include the necessary Docker containers responsible for the CTF setup. Once participants are connected to their respective environments, they can engage in challenges, exercises, or simulations typical of CTF competitions. This automation not only saves time but also enhances the scalability and consistency of CTF environments across different hosts and setups.
 
