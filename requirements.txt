@@ -5,3 +5,4 @@ click
 pre-commit
 colorlog
 coverage
+pytest
