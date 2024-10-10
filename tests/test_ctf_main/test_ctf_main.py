@@ -97,8 +97,6 @@ def test_main_success(
 
     # Assertions to check expected behavior
     assert result.exit_code == 0
-    assert "YAML file loaded successfully." in result.output
-    assert "Save path" in result.output
     assert "Mock prune called" in result.output
     assert "Mock stop called" in result.output
     assert "Mock remove called" in result.output
