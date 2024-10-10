@@ -1,3 +1,17 @@
+<a id="readme-top"></a>
+
+<!-- PROJECT SHIELDS -->
+<div align="center">
+
+[![Codecov Coverage][coverage-shield]][coverage-url]
+[![Contributors][contributors-shield]][contributors-url]
+[![Forks][forks-shield]][forks-url]
+[![Stargazers][stars-shield]][stars-url]
+[![Issues][issues-shield]][issues-url]
+[![EUPL License][license-shield]][license-url]
+
+</div>
+
 # CTF-Creator
 
 The Capture-The-Flag (CTF)-Creator is a Python-based project designed to automate the setup of CTF environments by managing Docker containers, networking, and security configurations. It simplifies the process of provisioning resources for multiple users, ensuring each participant has a dedicated and secure environment tailored to specific CTF requirements, as well as creating OpenVPN configuration files for secure connections to the CTF environment.
@@ -40,35 +54,43 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 ## Requirements
+
 ### Input requirements
+
 Provide a YAML configuration file with the following arguments:
 
-    -     `name`: Name of the YAML configuration (e.g., my_config).
-    -     `containers`: Docker containers deployed for each user in a specific subnet isolated from other users (e.g., nginx:latest).
-    -     `users`: List of users of the CTF environment created by the CTF-Creator.
-    -     `identityFile`: Path to the private SSH keys for host logins.
-    -     `hosts`: Hosts where the Docker containers for the CTF environment are running. Entries should start with the host username, followed by @, and then the IP address of the host (e.g., ubuntu@10.20.30.101).
-    -     `subnet_first_part`: First segment of the subnet IP address (e.g., 10 in 10.xx.xx.xx/24).
-    -     `subnet_second_part`: Second segment of the subnet IP address. (e.g., 13 in xx.13.xx.xx/24).
-    -     `subnet_third_part`: Third segment of the subnet IP address (e.g., 0 in xx.xx.0.xx/24).
+- `name`: Name of the YAML configuration (e.g., my_config).
+- `containers`: Docker containers deployed for each user in a specific subnet isolated from other users (e.g., nginx:latest).
+- `users`: List of users of the CTF environment created by the CTF-Creator.
+- `identityFile`: Path to the private SSH keys for host logins.
+- `hosts`: Hosts where the Docker containers for the CTF environment are running. Entries should start with the host username, followed by @, and then the IP address of the host (e.g., ubuntu@10.20.30.101).
+- `subnet_first_part`: First segment of the subnet IP address (e.g., 10 in 10.xx.xx.xx/24).
+- `subnet_second_part`: Second segment of the subnet IP address. (e.g., 13 in xx.13.xx.xx/24).
+- `subnet_third_part`: Third segment of the subnet IP address (e.g., 0 in xx.xx.0.xx/24).
 
-    An example YAML config file named test.yaml is available in the src directory to illustrate the required structure.
+An example YAML config file named test.yaml is available in the src directory to illustrate the required structure.
 Provide a **save path** where user data will be saved or is already saved:
 
 Sufficient memory space and the necessary system permissions are required to save the configuration files for each CTF environment user on the system running the CTF-Creator. The amount of space needed will depend on the number of users in the CTF environment, with an estimated space requirement of 140 KB per user.
 
 ### Requirements for the remote hosts that are specified in the YAML configuration
 **The hosts need to be capable of spawning Docker containers. For that please follow the instructions**:
+
 1. You need to install [Docker](https://docs.docker.com/engine/install/ubuntu/)
+
 2. You need to configure [remote access Docker daemon](https://docs.docker.com/engine/daemon/remote-access/)
-3. You need to be able to use Docker without privilaged Access run follwoing comand in the terminal of the remote hosts ```
-sudo usermod -aG docker $(whoami) && newgrp docker  ```
+
+3. You need to be able to use Docker without privilaged Access run follwoing comand in the terminal of the remote hosts
+
+```sh
+sudo usermod -aG docker $(whoami) && newgrp docker
+```
 
 The hosts need to support SSH connections using asymmetric public and private keys for secure remote access.
 
 ## Usage
 
-```bash
+```sh
 python3 src/ctf-main.py
 ```
 
@@ -92,7 +114,8 @@ For any other use case scenario please start a fresh set up.
 
 ## Testing
 To run all tests at once you can run this command in the terminal in the main folder `ctf-creator/`:
-```bash
+
+```sh
 python3 -m pytest -v
 ```
 
@@ -104,20 +127,48 @@ The main function of the CTF-Creator tool, located in src/ctf_main.py, serves as
 
 Key Functionalities:
 
-        1.    YAML Configuration Parsing
-        2.    SSH Connection Initialization
-        3.    Host Reachability and SSH Connectivity Check
-        4.    Cleanup of Existing Docker Containers and Networks
-        5.    Subnet Calculation and Network Setup
-        6.    OpenVPN Server Setup
-        7.    OpenVPN Configuration Management
-        8.    Docker Container Deployment
-        9.    Documentation and Output Generation
-        10.   Error Handling and Logging
+1. YAML Configuration Parsing
+2. SSH Connection Initialization
+3. Host Reachability and SSH Connectivity Check
+4. Cleanup of Existing Docker Containers and Networks
+5. Subnet Calculation and Network Setup
+6. OpenVPN Server Setup
+7. OpenVPN Configuration Management
+8. Docker Container Deployment
+9. Documentation and Output Generation
+10. Error Handling and Logging
 
 ## Credits
 
 This is the CTF-Creator programmed by Nick Nötzel under the supervision of Stefan Machmeier.
 
+Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
+Don't forget to give the project a star! Thanks again!
+
+### Top contributors:
+
+<a href="https://github.com/EMCL-Research-ITSecLab/ctf-creator/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=EMCL-Research-ITSecLab/ctf-creator" alt="contrib.rocks image" />
+</a>
+
+
 ## License
 [EUPL](https://joinup.ec.europa.eu/sites/default/files/custom-page/attachment/2020-03/EUPL-1.2%20EN.txt)
+
+
+<!-- MARKDOWN LINKS & IMAGES -->
+<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+[contributors-shield]: https://img.shields.io/github/contributors/EMCL-Research-ITSecLab/ctf-creator.svg?style=for-the-badge
+[contributors-url]: https://github.com/EMCL-Research-ITSecLab/ctf-creator/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/EMCL-Research-ITSecLab/ctf-creator.svg?style=for-the-badge
+[forks-url]: https://github.com/EMCL-Research-ITSecLab/ctf-creator/network/members
+[stars-shield]: https://img.shields.io/github/stars/EMCL-Research-ITSecLab/ctf-creator.svg?style=for-the-badge
+[stars-url]: https://github.com/EMCL-Research-ITSecLab/ctf-creator/stargazers
+[issues-shield]: https://img.shields.io/github/issues/EMCL-Research-ITSecLab/ctf-creator.svg?style=for-the-badge
+[issues-url]: https://github.com/EMCL-Research-ITSecLab/ctf-creator/issues
+[license-shield]: https://img.shields.io/github/license/EMCL-Research-ITSecLab/ctf-creator.svg?style=for-the-badge
+[license-url]: https://github.com/EMCL-Research-ITSecLab/ctf-creator/blob/master/LICENSE.txt
+[coverage-shield]: https://img.shields.io/codecov/c/github/EMCL-Research-ITSecLab/ctf-creator?style=for-the-badge
+[coverage-url]: https://app.codecov.io/github/EMCL-Research-ITSecLab/ctf-creator
