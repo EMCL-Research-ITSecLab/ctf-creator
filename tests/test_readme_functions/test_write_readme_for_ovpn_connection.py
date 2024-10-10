@@ -19,7 +19,7 @@ def test_write_readme_for_ovpn_connection_correct_content():
     expected_content = """
     # OpenVPN Connection Instructions
 
-    To connect to the desired subnet, use the following command: "sudo openvpn client.ovpn" 
+    To connect to the desired subnet, use the following command: "sudo openvpn client.ovpn"
 
     Once connected, you can only reach the Docker containers within the subnet. The possible reachable IP addresses with `ping` are:
 
@@ -52,7 +52,7 @@ def test_write_readme_for_ovpn_connection_no_containers():
     expected_content = """
     # OpenVPN Connection Instructions
 
-    To connect to the desired subnet, use the following command: "sudo openvpn client.ovpn" 
+    To connect to the desired subnet, use the following command: "sudo openvpn client.ovpn"
 
     Once connected, you can only reach the Docker containers within the subnet. The possible reachable IP addresses with `ping` are:
 
@@ -82,7 +82,7 @@ def test_write_readme_for_ovpn_connection_single_container():
     expected_content = """
     # OpenVPN Connection Instructions
 
-    To connect to the desired subnet, use the following command: "sudo openvpn client.ovpn" 
+    To connect to the desired subnet, use the following command: "sudo openvpn client.ovpn"
 
     Once connected, you can only reach the Docker containers within the subnet. The possible reachable IP addresses with `ping` are:
 
