@@ -24,7 +24,7 @@ Functions:
     7. OpenVPN Configuration Management
     8. Docker Container Deployment
     9. Documentation and Output Generation
-    10. Error Handling and Logging
+    10. Error Handling and logger
 
 Args:
   - config: Path to the YAML configuration file.
@@ -39,6 +39,7 @@ import subprocess
 from docker.errors import NotFound
 import click
 import os
+import sys
 import ovpn_helper_functions as ovpn_func
 import readme_functions as readme
 import time
@@ -46,18 +47,23 @@ import hosts_functions as hosts_func
 import validation_functions as valid
 from docker.errors import NotFound, APIError
 
+sys.path.append(os.getcwd())
+from src.log_config import get_logger
+
+logger = get_logger("data_inspection.inspector")
+
 
 # Click for reading data from the terminal
 @click.command()
 @click.option(
     "--config",
-    prompt="Please enter the path to your .yaml file",
+    required=True,
     help="The path to the .yaml configuration file for the CTF-Creator.",
     callback=valid.validate_yaml_file,
 )
 @click.option(
     "--save_path",
-    prompt="Please enter the path where you want to save the user data e.g. /home/nick/ctf-creator",
+    required=True,
     help="The path where you want to save the user data for the CTF-Creator. E.g. /home/nick/ctf-creator",
     callback=valid.validate_save_path,
 )
@@ -81,8 +87,8 @@ def main(config, save_path):
     try:
         with open(config, "r") as file:
             data = yaml.safe_load(file)
-            click.echo("YAML file loaded successfully.")
-            click.echo(f"Save path '{save_path}' is valid.")
+            logger.info("YAML file loaded successfully.")
+            logger.info(f"Save path '{save_path}' is valid.")
             # Process the YAML data as needed for the CTF-Creator
             (
                 containers,
@@ -93,11 +99,11 @@ def main(config, save_path):
                 subnet_second_part,
                 subnet_third_part,
             ) = yaml_func.read_data_from_yaml(data)
-            click.echo(f"Containers: {containers}")
-            click.echo(f"Users: {users}")
-            click.echo(f"Key: {key}")
-            click.echo(f"Hosts: {hosts}")
-            click.echo(
+            logger.info(f"Containers: {containers}")
+            logger.info(f"Users: {users}")
+            logger.info(f"Key: {key}")
+            logger.info(f"Hosts: {hosts}")
+            logger.info(
                 f"IP-Address Subnet-base: {subnet_first_part}.{subnet_second_part}.{subnet_third_part}"
             )
 
@@ -106,20 +112,19 @@ def main(config, save_path):
         number_users_per_vm = count_users // number_of_vm
         # If uneven you have rest users which get distributed uniformly
         number_rest_users = count_users % number_of_vm
-        click.echo(f"Number of users: {count_users}")
-        click.echo(f"Number of users per VM: {number_users_per_vm}")
-        click.echo(
+        logger.info(f"Number of users: {count_users}")
+        logger.info(f"Number of users per VM: {number_users_per_vm}")
+        logger.info(
             f"Number of remaining users to be distributed uniformly: {number_rest_users}"
         )
         # Extract Host Ip-Address from yaml file
         extracted_hosts = yaml_func.extract_hosts(hosts)
-        #!!! extracted_hosts_username = yaml_func.extract_host_usernames(hosts)
         try:
             hosts_func.check_host_reachability_with_ping(extracted_hosts)
         except Exception as e:
-            click.echo(f"An error occurred: {e}")
+            logger.error(f"An error occurred: {e}")
 
-        #
+        # TODO Add as argument
         # Define ssh-agent commands as a list
         commands = [
             f'eval "$(ssh-agent)" ',
@@ -135,7 +140,7 @@ def main(config, save_path):
             for command in commands:
                 result = subprocess.run(command, shell=True, executable="/bin/bash")
                 if result.returncode != 0:
-                    click.echo(f"Error executing command: {command}")
+                    logger.error(f"Error executing command: {command}")
                     break
         except Exception as e:
             raise RuntimeError(f"An unexpected error occurred: {e}")
@@ -145,11 +150,11 @@ def main(config, save_path):
         try:
             hosts_func.check_host_reachability_with_SSH(hosts)
         except Exception as e:
-            click.echo(f"An error occurred: {e}")
+            logger.error(f"An error occurred: {e}")
         # Clean up first
         # Initialize Docker client using the SSH connection
         # Remove all containers from the hosts
-        click.echo(
+        logger.info(
             "Start to clean up the Hosts. Deletes old Docker-containers and networks. It might take some time."
         )
         for host in hosts:
@@ -163,7 +168,7 @@ def main(config, save_path):
                         item.stop()
                         item.remove(force=True)
                     except NotFound:
-                        click.echo(
+                        logger.error(
                             f"Container {item.id} not found. It might have been removed already. But it is ok."
                         )
                 # Delete all docker networks
@@ -198,7 +203,7 @@ def main(config, save_path):
                     f"6. Check the CTF-creators README.md for more instructions. "
                     f"Original error: {e}"
                 )
-        click.echo("Clean up process on hosts finished!")
+        logger.info("Clean up process on hosts finished!")
 
         # Start after Clean up
         # Begin with the first Host in the list in the yaml.file
@@ -220,7 +225,7 @@ def main(config, save_path):
             # Variables for Split VPN
             new_push_route = f"{subnet_first_part}.{subnet_second_part}.{subnet_base}.0 255.255.255.0"
             subnet = f"{subnet_first_part}.{subnet_second_part}.{subnet_base}.0/24"
-            click.echo(f"Created Subnet: {subnet}")
+            logger.info(f"Created Subnet: {subnet}")
             gateway = f"{subnet_first_part}.{subnet_second_part}.{subnet_base}.1"
 
             # Move to the next VM and distribute users evenly
@@ -237,7 +242,7 @@ def main(config, save_path):
             local_save_path_to_user = f"{save_path}/data/{user_name}"
             if not os.path.exists(local_save_path_to_user):
                 doc.create_network(docker_client, network_name, subnet, gateway)
-                click.echo(
+                logger.info(
                     f"For the user: {user_name}, an OpenVPN configuration file will be generated!"
                 )
                 doc.create_openvpn_server(
@@ -249,7 +254,7 @@ def main(config, save_path):
                     current_host,
                 )
                 # Create Open VPN files
-                click.echo(f"The config files will be saved here {save_path}")
+                logger.info(f"The config files will be saved here {save_path}")
                 # Creates and downloads the Openvpn configs for the user
                 doc.create_openvpn_config(
                     docker_client, user_name, k, current_host, save_path, new_push_route
@@ -263,8 +268,8 @@ def main(config, save_path):
             # Starts OpenVPN-Container with existing data in save_path
             else:
                 # 2nd and 3rd use case
-                click.echo(f"OpenVPN data exists for the user: {user_name}")
-                click.echo(
+                logger.info(f"OpenVPN data exists for the user: {user_name}")
+                logger.info(
                     f"Data for the user: {user_name} will NOT be changed. Starting OVPN Docker container with existing data"
                 )
                 existing_host_ip, existing_port_number, existing_subnet = (
@@ -280,15 +285,15 @@ def main(config, save_path):
                         hosts, current_host
                     )
                 if existing_host_ip in extracted_hosts:
-                    click.echo(
+                    logger.info(
                         f"The remote host {existing_host_ip} in the already generated client.ovpn is existing. Everything is fine!"
                     )
                 else:
                     # 4th use case changed remote host in yaml config
-                    click.echo(
+                    logger.info(
                         f"The remote host {existing_host_ip} in the old client.ovpn is not existing anymore."
                     )
-                    click.echo(
+                    logger.info(
                         f"The generated client.ovpn for {user_name} gets changed locally. Please inform {user_name} and give him the new client.ovpn"
                     )
                     # Existing host is not existing anymore so change it into the current on from the loop iteration
@@ -330,7 +335,7 @@ def main(config, save_path):
                     existing_host_ip,
                     f"/home/{existing_host_username}/ctf-data/{user_name}/Dockovpn_data/",
                 )
-                click.echo(
+                logger.info(
                     f"For {user_name } the OVPN Docker container is running and can be connected with the the existing data"
                 )
             # Writes a readme file which describes reachable docker containers
@@ -354,18 +359,18 @@ def main(config, save_path):
                 )
         # Print all changed usernames
         if new_changed_ovpn_files_users:
-            click.echo("The following users had their OVPN files changed:")
+            logger.info("The following users had their OVPN files changed:")
             for user in new_changed_ovpn_files_users:
-                click.echo(user)
-        click.echo("Done.")
+                logger.info(user)
+        logger.info("Done.")
     except FileNotFoundError:
-        click.echo("Error: The specified file was not found.")
+        logger.error("Error: The specified file was not found.")
     except yaml.YAMLError as exc:
-        click.echo(f"Error parsing YAML file: {exc}")
+        logger.error(f"Error parsing YAML file: {exc}")
     except ValueError as exc:
-        click.echo(f"Error in YAML data: {exc}")
+        logger.error(f"Error in YAML data: {exc}")
     except Exception as e:
-        click.echo(f"An unexpected error occurred: {e}")
+        logger.error(f"An unexpected error occurred: {e}")
 
 
 # main function for the main module

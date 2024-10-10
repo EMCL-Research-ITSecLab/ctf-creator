@@ -2,3 +2,5 @@ docker
 paramiko
 pyyaml
 click
+pre-commit
+colorlog

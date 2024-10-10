@@ -62,7 +62,12 @@ def create_container(client, network_name, name, image, static_address):
 
 
 def create_openvpn_server(
-    client, network_name, name, static_address, counter, host_address
+    client: docker.DockerClient,
+    network_name,
+    name,
+    static_address,
+    counter,
+    host_address,
 ):
     """
     Create an OpenVPN server container with specific configurations.

@@ -10,7 +10,7 @@ Functions:
 import subprocess
 import os
 import time
-
+import logging
 
 class DownloadError(Exception):
     """Custom exception for download errors."""
@@ -48,23 +48,23 @@ def curl_client_ovpn_file_version(
         while max_retries_counter < max_retries:
             try:
                 subprocess.run(command, shell=True, check=True)
-                print(f"File downloaded successfully to {save_directory}/client.ovpn")
+                logging.info(f"File downloaded successfully to {save_directory}/client.ovpn")
                 return
             except subprocess.CalledProcessError:
                 max_retries_counter += 1
                 time.sleep(3)
-                print(f"Retrying... ({max_retries_counter}/{max_retries})")
+                logging.info(f"Retrying... ({max_retries_counter}/{max_retries})")
             except Exception as e:
-                print(f"Unexpected error: {e}")
+                logging.error(f"Unexpected error: {e}")
                 max_retries_counter += 1
                 time.sleep(3)
-                print(f"Retrying... ({max_retries_counter}/{max_retries})")
+                logging.info(f"Retrying... ({max_retries_counter}/{max_retries})")
 
-        print(f"Download failed after {max_retries} retries.")
+        logging.info(f"Download failed after {max_retries} retries.")
         raise DownloadError("Max retries exceeded.")
 
     except Exception as e:
-        print(f"Error: An unexpected error occurred - {e}")
+        logging.error(f"Error: An unexpected error occurred - {e}")
         raise DownloadError(f"An unexpected error occurred - {e}")
 
 
@@ -167,12 +167,12 @@ def modify_ovpn_file_change_host(file_path, new_ip, new_port, username):
     if change_needed:
         with open(file_path, "w") as file:
             file.writelines(modified_lines)
-        print(
+        logging.info(
             f"IP address and port in the 'remote' line of {file_path} have been successfully modified."
         )
         return username
     else:
-        print(
+        logging.info(
             f"No change needed for {username}. The IP address and port are already correct."
         )
         return None

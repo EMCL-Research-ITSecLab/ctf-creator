@@ -4,7 +4,7 @@
 #
 # Arguments for the YAML file:
 #  - name: Name of the YAML config.
-#  - containers: Docker containers deployed for each user.
+#  - containers: Docker containers that get started for each user.
 #  - users: List of users.
 #  - identityFile: Path to the private SSH keys for host login.
 #  - hosts: Hosts where the Docker containers are running.
@@ -14,36 +14,32 @@
 #
 ######################################################################################
 
-name: test1
-# Containername:version
+name: Exercise 1
+# Containername:version 
 # E.g. nginx:latest
 containers:
+  # - ghcr.io/emcl-research-itseclab/itsec-1-exercises:main-wireshark-1
   - nginx:latest
-  - nginx:latest
+
 # Usernames/ Uni-IDs
 users:
   - tz251
-  - mg235
-  - qd109
-  - lk543
 
 # For SSH Connection
 # Direction of your private SSH key
 identityFile:
- - /home/nick/Data/ssh_key
+ - /home/smachmeier/.ssh/hiscout
 
 # For SSH Connection with user in Terminal
 # E.g. user@hostIPadress
 hosts:
-  - ubuntu@10.20.30.101
-  - ubuntu@10.20.30.102
-  - ubuntu@10.20.30.103
-  - ubuntu@10.20.30.104
+  - debian@129.206.5.206
 
 # IP Adress: firstpart.xx.xx.xx/24
 # E.g. 10 if IP Adress is 10.13.0.0/24
 subnet_first_part:
  - 10
+ 
 # IP Adress xx.second_part.xx.xx/24
 # E.g. 13 if IP Adress is 10.13.0.0/24
 subnet_second_part:

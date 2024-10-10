@@ -1,6 +1,6 @@
 # CTF-Creator
 
-The Capture-The-Flag (CTF)-Creator is a Python-based project designed to automate the setup of CTF environments by managing Docker containers, networking, and security configurations. It simplifies the process of provisioning resources for multiple users, ensuring each participant has a dedicated and secure environment tailored to specific CTF requirements, as well as creating OpenVPN configuration files for secure connections to the CTF environment. 
+The Capture-The-Flag (CTF)-Creator is a Python-based project designed to automate the setup of CTF environments by managing Docker containers, networking, and security configurations. It simplifies the process of provisioning resources for multiple users, ensuring each participant has a dedicated and secure environment tailored to specific CTF requirements, as well as creating OpenVPN configuration files for secure connections to the CTF environment.
 
 By integrating with Docker, SSH, and networking tools, the system automates the creation of isolated environments that include the necessary Docker containers responsible for the CTF setup. Once participants are connected to their respective environments, they can engage in challenges, exercises, or simulations typical of CTF competitions. This automation not only saves time but also enhances the scalability and consistency of CTF environments across different hosts and setups.
 
@@ -39,7 +39,7 @@ pip install -r requirements.txt
 python3 -m venv .venv
 source .venv/bin/activate
 ```
-## Requirements 
+## Requirements
 ### Input requirements
 Provide a YAML configuration file with the following arguments:
 
@@ -51,18 +51,18 @@ Provide a YAML configuration file with the following arguments:
     -     `subnet_first_part`: First segment of the subnet IP address (e.g., 10 in 10.xx.xx.xx/24).
     -     `subnet_second_part`: Second segment of the subnet IP address. (e.g., 13 in xx.13.xx.xx/24).
     -     `subnet_third_part`: Third segment of the subnet IP address (e.g., 0 in xx.xx.0.xx/24).
-   
+
     An example YAML config file named test.yaml is available in the src directory to illustrate the required structure.
 Provide a **save path** where user data will be saved or is already saved:
 
 Sufficient memory space and the necessary system permissions are required to save the configuration files for each CTF environment user on the system running the CTF-Creator. The amount of space needed will depend on the number of users in the CTF environment, with an estimated space requirement of 140 KB per user.
 
-### Requirements for the remote hosts that are specified in the YAML configuration 
-**The hosts need to be capable of spawning Docker containers. For that please follow the instructions**: 
+### Requirements for the remote hosts that are specified in the YAML configuration
+**The hosts need to be capable of spawning Docker containers. For that please follow the instructions**:
 1. You need to install [Docker](https://docs.docker.com/engine/install/ubuntu/)
 2. You need to configure [remote access Docker daemon](https://docs.docker.com/engine/daemon/remote-access/)
 3. You need to be able to use Docker without privilaged Access run follwoing comand in the terminal of the remote hosts ```
-sudo usermod -aG docker $(whoami) && newgrp docker  ```      
+sudo usermod -aG docker $(whoami) && newgrp docker  ```
 
 The hosts need to support SSH connections using asymmetric public and private keys for secure remote access.
 
@@ -79,28 +79,28 @@ Due to the use of an SSH agent for the Connection to the hosts, you will also be
 ### Use Cases
 
 1. Fresh set up: Creating the Environment Without Reusing OVPN Data
-2. Reusing Existing OVPN Configurations Without Adding New Users: 
+2. Reusing Existing OVPN Configurations Without Adding New Users:
 3. Reusing Existing OVPN Configurations While Adding New Users
 4. Reusing Data While Modifying Hosts
 
 For use case 1 specify a save path with no existing data created by the CTF-Creator.
 For the use cases 2-4 specify a save path where user data already exists.
 
-For every use case, the list of deploying Docker containers can be changed. 
+For every use case, the list of deploying Docker containers can be changed.
 
 For any other use case scenario please start a fresh set up.
 
 ## Testing
 To run all tests at once you can run this command in the terminal in the main folder `ctf-creator/`:
 ```bash
-python3 -m pytest -v 
+python3 -m pytest -v
 ```
 
 ## Features
 
 #### Main Function Overview
 
-The main function of the CTF-Creator tool, located in src/ctf_main.py, serves as the core component responsible for setting up the entire CTF environment. It reads configurations from a YAML file, connects to specified hosts via SSH, and deploys Docker containers and networks uniformly across all hosts according to the provided specifications, utilizing various helper functions and external libraries such as Docker SDK, PyYAML, and Click. 
+The main function of the CTF-Creator tool, located in src/ctf_main.py, serves as the core component responsible for setting up the entire CTF environment. It reads configurations from a YAML file, connects to specified hosts via SSH, and deploys Docker containers and networks uniformly across all hosts according to the provided specifications, utilizing various helper functions and external libraries such as Docker SDK, PyYAML, and Click.
 
 Key Functionalities:
 
@@ -114,11 +114,10 @@ Key Functionalities:
         8.    Docker Container Deployment
         9.    Documentation and Output Generation
         10.   Error Handling and Logging
-        
+
 ## Credits
 
 This is the CTF-Creator programmed by Nick Nötzel under the supervision of Stefan Machmeier.
 
 ## License
 [EUPL](https://joinup.ec.europa.eu/sites/default/files/custom-page/attachment/2020-03/EUPL-1.2%20EN.txt)
-

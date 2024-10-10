@@ -15,7 +15,7 @@ Functions:
 - extract_hosts(hosts): Extracts the host IP addresses from each string in a list of hosts.
 - find_host_username_by_ip(hosts, existing_host_ip): Finds and returns the username associated with a
   given IP address from a list of host strings.
-  
+
 """
 
 import re
