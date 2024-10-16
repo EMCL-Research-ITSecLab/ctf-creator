@@ -15,37 +15,21 @@
 ######################################################################################
 
 name: Exercise 1
-# Containername:version 
+# Containername:version
 # E.g. nginx:latest
 containers:
   # - ghcr.io/emcl-research-itseclab/itsec-1-exercises:main-wireshark-1
-  - nginx:latest
+  - image: nginx:latest
 
 # Usernames/ Uni-IDs
 users:
   - tz251
 
-# For SSH Connection
-# Direction of your private SSH key
-identityFile:
- - /home/smachmeier/.ssh/hiscout
-
 # For SSH Connection with user in Terminal
 # E.g. user@hostIPadress
 hosts:
-  - debian@129.206.5.206
+  - ip: 129.206.5.206
+    username: debian
+    identity_file: /Users/stefan/.ssh/hiscout
 
-# IP Adress: firstpart.xx.xx.xx/24
-# E.g. 10 if IP Adress is 10.13.0.0/24
-subnet_first_part:
- - 10
- 
-# IP Adress xx.second_part.xx.xx/24
-# E.g. 13 if IP Adress is 10.13.0.0/24
-subnet_second_part:
- - 13
-
-# IP Adress xx.xx.third_part.xx/24
-# E.g. 0 if IP Adress is 10.13.0.0/24
-subnet_third_part:
- - 0
+subnet: 10.13.0.0/24
