@@ -29,6 +29,7 @@ detailed_formatter = colorlog.ColoredFormatter(
     log_colors=log_colors,
 )
 
+
 class CustomHandler(logging.StreamHandler):
     """
     Handles the different styles of logging messages with respect to their level.
@@ -48,6 +49,7 @@ class CustomHandler(logging.StreamHandler):
         if record.levelno in (logging.INFO, logging.WARNING):
             return simple_formatter.format(record)
         return detailed_formatter.format(record)
+
 
 def get_logger(module_name: str = "base") -> logging.Logger:
     """

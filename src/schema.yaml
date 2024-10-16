@@ -1,0 +1,18 @@
+# ctf_main_schema.yaml
+---
+name: str(required=True)  # Name of the YAML config must be a string
+containers: list(include('container'), required=True)  # List of Docker containers
+users: list(str(), required=True, unique=True)  # List of users (should be unique)
+hosts: list(include('host'), required=True)  # List of hosts
+subnet: ip(required=True)  # subnet
+
+---
+host:
+  ip: str(required=True)
+  username: str(required=True)
+  identity_file: path(required=True)
+
+---
+container:
+  image: str(required=True)
+  enviroment: list(str(), required=False)
