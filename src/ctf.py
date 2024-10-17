@@ -141,6 +141,7 @@ class CTFCreator:
                 host: Host = [d for d in self.hosts if str(d.ip) == ip][0]
 
                 host.send_and_extract_tar(user=user)
+
                 host.start_openvpn(
                     user=user,
                     openvpn_port=existing_openvpn_port,

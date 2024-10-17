@@ -13,12 +13,14 @@ from src.docker_env import Docker
 
 logger = get_logger("ctf_creator.host")
 
+
 class RemoteLineNotFoundError(Exception):
     """Custom exception raised when no 'remote' line is found in the OpenVPN configuration file."""
 
     pass
 
-class Host():
+
+class Host:
     def __init__(self, host: dict, save_path: str) -> None:
         self.username = host.get("username")
         self.ip = ip_address(host.get("ip"))
@@ -68,7 +70,10 @@ class Host():
         try:
             # Attempt to SSH into the host
             result = run(
-                ["ssh", "-i", self.identify_path, f"{self.username}@{self.ip}", "exit"], capture_output=True, text=True, timeout=10
+                ["ssh", "-i", self.identify_path, f"{self.username}@{self.ip}", "exit"],
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
 
             if result.returncode != 0:
@@ -131,10 +136,7 @@ class Host():
             ssh.close()
 
     def _add_ssh_identity(self):
-        commands = [
-            f'eval "$(ssh-agent)" ',
-            f'ssh-add {self.identify_path}'
-        ]
+        commands = [f'eval "$(ssh-agent)" ', f"ssh-add {self.identify_path}"]
 
         try:
             # Run all commands in the list of commands
@@ -149,7 +151,7 @@ class Host():
     def clean_up(self):
         self.docker.prune()
         self._execute_ssh_command(
-           f"sudo test -d /home/{self.username}/ctf-data/ && sudo rm -r /home/{self.username}/ctf-data/"
+            f"sudo test -d /home/{self.username}/ctf-data/ && sudo rm -r /home/{self.username}/ctf-data/"
         )
         logger.info("Clean up process on hosts finished!")
 
@@ -178,7 +180,9 @@ class Host():
             ssh.connect(str(self.ip), port=22, username=self.username)
 
             # Extract the remote directory path
-            remote_dir = os.path.dirname(f"/home/{self.username}/ctf-data/{user}/Dockovpn_data/")
+            remote_dir = os.path.dirname(
+                f"/home/{self.username}/ctf-data/{user}/Dockovpn_data/"
+            )
 
             # Ensure the remote directory exists
             logger.info(f"Ensuring the remote directory {remote_dir} exists...")
@@ -197,11 +201,15 @@ class Host():
             sftp.put(tar_file_path, remote_path)
             sftp.close()
 
-            logger.info(f"File {tar_file_path} successfully sent to {self.ip}:{remote_path}")
+            logger.info(
+                f"File {tar_file_path} successfully sent to {self.ip}:{remote_path}"
+            )
 
             # Ensure correct permissions for the remote path and extract the tar file
             logger.info(f"Extracting tar file {remote_path} on {self.ip}...")
-            extract_command = f"tar -xf {remote_path} -C {remote_dir}"
+            extract_command = (
+                f"tar --strip-components=1 -xf {remote_path} -C {remote_dir}"
+            )
             _, stdout, stderr = ssh.exec_command(extract_command)
             stdout.channel.recv_exit_status()  # Wait for the command to complete
 
@@ -223,8 +231,18 @@ class Host():
             logger.info("Closing the SSH connection...")
             ssh.close()
 
-    def start_openvpn(self, user: str, openvpn_port: int, http_port: int, subnet: IPv4Network|IPv6Network ):
-        self.docker.create_network(name=f"{user}_network", subnet_=str(subnet), gateway_=str(subnet.network_address + 1))
+    def start_openvpn(
+        self,
+        user: str,
+        openvpn_port: int,
+        http_port: int,
+        subnet: IPv4Network | IPv6Network,
+    ):
+        self.docker.create_network(
+            name=f"{user}_network",
+            subnet_=str(subnet),
+            gateway_=str(subnet.network_address + 1),
+        )
 
         self.docker.create_openvpn_server(
             host_address=str(subnet.network_address + 2),
@@ -236,21 +254,22 @@ class Host():
         )
 
         if not os.path.exists(f"{self.save_path}/data/{user}"):
-            self.docker.get_openvpn_config(user=user, http_port=http_port, save_path=self.save_path)
+            self.docker.get_openvpn_config(
+                user=user, http_port=http_port, save_path=self.save_path
+            )
 
-        self._modify_ovpn_client(
-            user=user,
-            port=openvpn_port
-        )
-        
+        self._modify_ovpn_client(user=user, port=openvpn_port)
+
         self.docker.modify_ovpn_server(user=user, subnet=subnet)
 
-    def start_container(self, user: str, container: dict, subnet: IPv4Network|IPv6Network, index: int) -> None:
+    def start_container(
+        self, user: str, container: dict, subnet: IPv4Network | IPv6Network, index: int
+    ) -> None:
         self.docker.create_container(
             name=f"{user}_{container['name']}_" + f"{index}",
             network_name=f"{user}_network",
             image=container["image"],
-            host_address=str(subnet.network_address + 3 + index)
+            host_address=str(subnet.network_address + 3 + index),
         )
 
     def _modify_ovpn_client(self, user: str, port: int) -> None:
@@ -261,7 +280,7 @@ class Host():
         Args:
             user (str): Username associated with the OpenVPN configuration file.
             port (int): New port number to replace in the 'remote' line.
-            
+
         Returns:
             str: The username if the configuration was changed, otherwise None.
         """

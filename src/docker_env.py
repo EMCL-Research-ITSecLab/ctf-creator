@@ -1,4 +1,4 @@
-from ipaddress import ip_address
+from ipaddress import IPv4Network, IPv6Network, ip_address
 import sys
 import os
 import time
@@ -18,6 +18,7 @@ class DownloadError(Exception):
     """Custom exception for download errors."""
 
     pass
+
 
 class Docker:
     def __init__(self, host: dict) -> None:
@@ -85,7 +86,7 @@ class Docker:
             docker.errors.APIError: If an error occurs during the container creation process.
         """
         self._check_image_existence(image_name=image)
-        
+
         endpoint_config = EndpointConfig(version="1.44", ipv4_address=host_address)
         try:
             container = self.client.containers.run(
@@ -162,18 +163,20 @@ class Docker:
         except Exception as e:
             logger.error(f"Error: Something is wrong with {container_name}. {e}")
             exit(1)
-        
+
         unhealthy = True
         max_retries = 0
         while unhealthy or max_retries == 25:
             container = self.client.containers.get(container_name)
-            if container.attrs['State']['Health']:
-                health_status = container.attrs['State']['Health']['Status']
+            if container.attrs["State"]["Health"]:
+                health_status = container.attrs["State"]["Health"]["Status"]
                 logger.info(f"{container_name}: Health status: {health_status}")
                 if health_status == "healthy":
-                    unhealthy = False 
+                    unhealthy = False
             else:
-                logger.info(f"{container_name}: No healthcheck defined for this container")
+                logger.info(
+                    f"{container_name}: No healthcheck defined for this container"
+                )
             max_retries += 1
             time.sleep(5)
 
@@ -217,7 +220,7 @@ class Docker:
         user: str,
         openvpn_port: int,
         http_port: int,
-        mount_path: int,
+        mount_path: str,
     ):
         """
         Create an OpenVPN server container with specific configurations.
@@ -245,9 +248,9 @@ class Docker:
                 cap_add=["NET_ADMIN"],
                 ports={"1194/udp": str(openvpn_port), "8080/tcp": str(http_port)},
                 healthcheck={
-                    "test": ["CMD-SHELL", f"netstat -ltn | grep -c 8080"],
+                    "test": ["CMD-SHELL", f"netstat -lun | grep -c 1194"],
                     "interval": 1000000,
-                    "retries": 5
+                    "retries": 5,
                 },
                 environment={
                     "HOST_ADDR": f"{str(self.ip)}",
@@ -315,16 +318,19 @@ class Docker:
                     f"Error: Image {image_name} could not be pulled. Does this Docker Image exist?"
                 )
 
-    def modify_ovpn_server(self, user, subnet):
+    def modify_ovpn_server(self, user: str, subnet: IPv4Network | IPv6Network):
+
         container = self.client.containers.get(f"{user}_openvpn")
-        
-        command = f"echo -e \"route-nopull\nroute {subnet} 255.255.255.0\npull-filter ignore \"redirect-gateway\"\npull-filter ignore \"dhcp-option\"\npull-filter ignore \"route\"\" >> /etc/openvpn/server.conf"
-        
-        container.exec_run(cmd=command, tty=True)
-        
-        
+        delete_old = [
+            "sed -i '/push \"redirect-gateway/d' /etc/openvpn/server.conf",
+            f"sed -i '$ a\\push \"route {subnet.network_address} 255.255.255.0\"' >> /etc/openvpn/server.conf",
+            "sed -i '$ a\\route-nopull' >> /etc/openvpn/server.conf",
+        ]
+        for sed_cmd in delete_old:
+            container.exec_run(cmd=sed_cmd)
+
         container.restart()
-        
+
         # if not os.path.exists(file_path):
         #     print(f"File {file_path} does not exist.")
         #     return
