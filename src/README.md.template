@@ -1,0 +1,13 @@
+# OpenVPN Connection Instructions
+
+Dear {user},
+
+
+To connect to the desired subnet, use the following command: "sudo openvpn client.ovpn"
+
+Once connected, you can only reach the Docker containers within the subnet. The possible reachable IP addresses with `ping` are:
+
+- {subnet}.1
+- {subnet}.2
+
+Good luck, and may the flags be ever in your favor!

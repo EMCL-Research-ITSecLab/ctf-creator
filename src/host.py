@@ -1,3 +1,4 @@
+import re
 import sys
 import os
 from typing import List
@@ -238,16 +239,17 @@ class Host:
         http_port: int,
         subnet: IPv4Network | IPv6Network,
     ):
+        user_filtered = re.sub('[^A-Za-z0-9]+', '', user)
         self.docker.create_network(
-            name=f"{user}_network",
+            name=f"{user_filtered}_network",
             subnet_=str(subnet),
             gateway_=str(subnet.network_address + 1),
         )
 
         self.docker.create_openvpn_server(
             host_address=str(subnet.network_address + 2),
-            network_name=f"{user}_network",
-            user=user,
+            network_name=f"{user_filtered}_network",
+            container_name=f"{user_filtered}_openvpn",
             openvpn_port=openvpn_port,
             http_port=http_port,
             mount_path=f"/home/{self.username}/ctf-data/{user}/Dockovpn_data/",
@@ -255,19 +257,20 @@ class Host:
 
         if not os.path.exists(f"{self.save_path}/data/{user}"):
             self.docker.get_openvpn_config(
-                user=user, http_port=http_port, save_path=self.save_path
+                user=user, container_name=f"{user_filtered}_openvpn", http_port=http_port, save_path=self.save_path
             )
 
         self._modify_ovpn_client(user=user, port=openvpn_port)
 
-        self.docker.modify_ovpn_server(user=user, subnet=subnet)
+        self.docker.modify_ovpn_server(user=user_filtered, subnet=subnet)
 
     def start_container(
         self, user: str, container: dict, subnet: IPv4Network | IPv6Network, index: int
     ) -> None:
+        user_filtered = re.sub('[^A-Za-z0-9]+', '', user)
         self.docker.create_container(
-            name=f"{user}_{container['name']}_" + f"{index}",
-            network_name=f"{user}_network",
+            container_name=f"{user_filtered}_{container['name']}_" + f"{index}",
+            network_name=f"{user_filtered}_network",
             image=container["image"],
             host_address=str(subnet.network_address + 3 + index),
         )

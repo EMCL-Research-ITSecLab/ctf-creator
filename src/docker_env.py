@@ -4,7 +4,7 @@ import os
 import time
 
 from subprocess import run, CalledProcessError
-from docker import DockerClient, from_env
+from docker import DockerClient
 from docker.errors import NotFound, APIError, ImageNotFound
 from docker.types import EndpointConfig, IPAMPool, IPAMConfig
 
@@ -69,7 +69,7 @@ class Docker:
             )
 
     def create_container(
-        self, network_name: str, host_address: str, name: str, image: str
+        self, network_name: str, host_address: str, container_name: str, image: str
     ) -> None:
         """
         Create a Docker container with a specific name, image, and static IP address.
@@ -92,7 +92,7 @@ class Docker:
             container = self.client.containers.run(
                 image,
                 detach=True,
-                name=name,
+                name=container_name,
                 network=network_name,
                 networking_config={network_name: endpoint_config},
             )
@@ -150,9 +150,8 @@ class Docker:
             logger.error(f"Error: An unexpected error occurred - {e}")
             raise DownloadError(f"An unexpected error occurred - {e}")
 
-    def get_openvpn_config(self, user: str, http_port: int, save_path: str):
+    def get_openvpn_config(self, user: str, http_port: int, container_name: str, save_path: str):
         logger.info(f"Downloading OpenVPN configuration for {user}...")
-        container_name = f"{user}_openvpn"
 
         # Download the folder with data
         try:
@@ -217,7 +216,7 @@ class Docker:
         self,
         host_address: str,
         network_name: str,
-        user: str,
+        container_name: str,
         openvpn_port: int,
         http_port: int,
         mount_path: str,
@@ -242,7 +241,7 @@ class Docker:
             container = self.client.containers.run(
                 image="alekslitvinenk/openvpn",
                 detach=True,
-                name=f"{user}_openvpn",
+                name=container_name,
                 network=network_name,
                 restart_policy={"Name": "always"},
                 cap_add=["NET_ADMIN"],
