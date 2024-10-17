@@ -150,7 +150,9 @@ class Docker:
             logger.error(f"Error: An unexpected error occurred - {e}")
             raise DownloadError(f"An unexpected error occurred - {e}")
 
-    def get_openvpn_config(self, user: str, http_port: int, container_name: str, save_path: str):
+    def get_openvpn_config(
+        self, user: str, http_port: int, container_name: str, save_path: str
+    ):
         logger.info(f"Downloading OpenVPN configuration for {user}...")
 
         # Download the folder with data

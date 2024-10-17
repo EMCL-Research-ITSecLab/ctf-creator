@@ -239,7 +239,7 @@ class Host:
         http_port: int,
         subnet: IPv4Network | IPv6Network,
     ):
-        user_filtered = re.sub('[^A-Za-z0-9]+', '', user)
+        user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
         self.docker.create_network(
             name=f"{user_filtered}_network",
             subnet_=str(subnet),
@@ -257,7 +257,10 @@ class Host:
 
         if not os.path.exists(f"{self.save_path}/data/{user}"):
             self.docker.get_openvpn_config(
-                user=user, container_name=f"{user_filtered}_openvpn", http_port=http_port, save_path=self.save_path
+                user=user,
+                container_name=f"{user_filtered}_openvpn",
+                http_port=http_port,
+                save_path=self.save_path,
             )
 
         self._modify_ovpn_client(user=user, port=openvpn_port)
@@ -267,7 +270,7 @@ class Host:
     def start_container(
         self, user: str, container: dict, subnet: IPv4Network | IPv6Network, index: int
     ) -> None:
-        user_filtered = re.sub('[^A-Za-z0-9]+', '', user)
+        user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
         self.docker.create_container(
             container_name=f"{user_filtered}_{container['name']}_" + f"{index}",
             network_name=f"{user_filtered}_network",

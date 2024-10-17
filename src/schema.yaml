@@ -1,4 +1,3 @@
-# ctf_main_schema.yaml
 ---
 name: str(required=True)  # Name of the YAML config must be a string
 containers: list(include('container'), required=True)  # List of Docker containers

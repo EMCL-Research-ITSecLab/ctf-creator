@@ -101,14 +101,16 @@ class CTFCreator:
             return None
 
     def _write_readme(self, path: str, subnet: str, containers: List):
-        with open(f"{os.path.dirname(os.path.realpath(__file__))}/README.md.template", 'r') as file:
+        with open(
+            f"{os.path.dirname(os.path.realpath(__file__))}/README.md.template", "r"
+        ) as file:
             readme_content = file.read()
 
-        readme_content = readme_content.format(
-            subnet=subnet
-        )
+        readme_content = readme_content.format(subnet=subnet)
 
-        logger.debug("Add the reachable container IP addresses based on the length of the containers list")
+        logger.debug(
+            "Add the reachable container IP addresses based on the length of the containers list"
+        )
         for i in range(1, len(containers) + 1):
             readme_content += f"\n- {subnet}.{2 + i}"
 
@@ -123,8 +125,7 @@ class CTFCreator:
         except OSError as e:
             logger.error(f"Error writing README.md file: {e}")
             raise
-    
-    
+
     def create_challenge(self):
         logger.info("Set up hosts.")
         self.hosts = self._get_hosts()
@@ -191,17 +192,18 @@ class CTFCreator:
                     user=user, container=container, subnet=next_network, index=idx
                 )
 
-            self._write_readme(path=f"{self.save_path}/data/{user}/", subnet=next_network, containers=self.config.get("containers"))
-            
+            self._write_readme(
+                path=f"{self.save_path}/data/{user}/",
+                subnet=next_network,
+                containers=self.config.get("containers"),
+            )
+
             next_network = ip_network(
                 (int(next_network.network_address) + next_network.num_addresses),
                 strict=False,
             )
             next_network = next_network.supernet(new_prefix=24)
             challenge_counter += 1
-            
-            
-            
 
 
 @click.command()
