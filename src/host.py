@@ -13,23 +13,28 @@ from src.docker_env import Docker
 
 logger = get_logger("ctf_creator.host")
 
+class RemoteLineNotFoundError(Exception):
+    """Custom exception raised when no 'remote' line is found in the OpenVPN configuration file."""
+
+    pass
+
 class Host():
     def __init__(self, host: dict, save_path: str) -> None:
         self.username = host.get("username")
         self.ip = ip_address(host.get("ip"))
         logger.info(f"Check connection for {self.username}@{self.ip}")
-        
+
         self.identify_path = host.get("identity_file")
         if not os.path.isfile(self.identify_path):
             raise FileNotFoundError(f"Identity file not found: {self.identify_path}.")
-        
+
         self._check_reachability()
         self._check_ssh()
         self._add_ssh_identity()
-        
+
         self.docker = Docker(host=host)
         self.save_path = save_path
-    
+
     def _check_reachability(self):
         """
         Checks the reachability of a host using the ping command.
@@ -49,7 +54,7 @@ class Host():
         except Exception as e:
             logger.error(f"Error pinging host {self.ip}: {e}")
             raise
-    
+
     def _check_ssh(self):
         """
         Checks SSH connectivity and credentials for a given host. Helper function.
@@ -81,7 +86,7 @@ class Host():
         except Exception as e:
             logger.error(f"Error attempting SSH connection to {self.ip}: {e}")
             return False
-    
+
     def _execute_ssh_command(self, command):
         """
         Executes a command on a remote host via SSH.
@@ -124,7 +129,7 @@ class Host():
         finally:
             # Close the SSH connection
             ssh.close()
-    
+
     def _add_ssh_identity(self):
         commands = [
             f'eval "$(ssh-agent)" ',
@@ -140,7 +145,7 @@ class Host():
                     break
         except Exception as e:
             raise RuntimeError(f"An unexpected error occurred: {e}")
-    
+
     def clean_up(self):
         self.docker.prune()
         self._execute_ssh_command(
@@ -157,7 +162,7 @@ class Host():
         """
         tar_file_path = f"{self.save_path}/data/{user}/dockovpn_data.tar"
         remote_path = f"/home/{self.username}/ctf-data/{user}/dock_vpn_data.tar"
-        
+
         # Create an SSH client
         ssh = SSHClient()
 
@@ -219,19 +224,86 @@ class Host():
             ssh.close()
 
     def start_openvpn(self, user: str, openvpn_port: int, http_port: int, subnet: IPv4Network|IPv6Network ):
-        self.docker.create_network(name=f"{self.username}_network", subnet_=str(subnet), gateway_=str(subnet.network_address + 1))
-        
+        self.docker.create_network(name=f"{user}_network", subnet_=str(subnet), gateway_=str(subnet.network_address + 1))
+
         self.docker.create_openvpn_server(
             host_address=str(subnet.network_address + 2),
-            network_name=f"{self.username}_network",
-            user=user, 
+            network_name=f"{user}_network",
+            user=user,
             openvpn_port=openvpn_port,
             http_port=http_port,
             mount_path=f"/home/{self.username}/ctf-data/{user}/Dockovpn_data/",
         )
-        
+
         if not os.path.exists(f"{self.save_path}/data/{user}"):
             self.docker.get_openvpn_config(user=user, http_port=http_port, save_path=self.save_path)
 
-    def start_containers(self, user: str, containers: List) -> None:
-        pass
+        self._modify_ovpn_client(
+            user=user,
+            port=openvpn_port
+        )
+        
+        self.docker.modify_ovpn_server(user=user, subnet=subnet)
+
+    def start_container(self, user: str, container: dict, subnet: IPv4Network|IPv6Network, index: int) -> None:
+        self.docker.create_container(
+            name=f"{user}_{container['name']}_" + f"{index}",
+            network_name=f"{user}_network",
+            image=container["image"],
+            host_address=str(subnet.network_address + 3 + index)
+        )
+
+    def _modify_ovpn_client(self, user: str, port: int) -> None:
+        """
+        Changes the IP address and port in the 'remote' line of an OpenVPN configuration file
+        only if the IP address or port is different from the current values.
+
+        Args:
+            user (str): Username associated with the OpenVPN configuration file.
+            port (int): New port number to replace in the 'remote' line.
+            
+        Returns:
+            str: The username if the configuration was changed, otherwise None.
+        """
+        if not os.path.exists(f"{self.save_path}/data/{user}/client.ovpn"):
+            print(f"File {f'{self.save_path}/data/{user}/client.ovpn'} does not exist.")
+            return None
+
+        modified_lines = []
+
+        with open(f"{self.save_path}/data/{user}/client.ovpn", "r") as file:
+            lines = file.readlines()
+
+        remote_line_found = False
+        change_needed = False
+
+        for line in lines:
+            if line.startswith("remote "):
+                parts = line.split()
+                if len(parts) == 3:
+                    current_ip = parts[1]
+                    current_port = parts[2]
+
+                    if current_ip != self.ip or current_port != str(port):
+                        parts[1] = str(self.ip)
+                        parts[2] = str(port)
+                        line = " ".join(parts) + "\n"
+                        change_needed = True
+
+                    remote_line_found = True
+
+            modified_lines.append(line)
+
+        if not remote_line_found:
+            raise RemoteLineNotFoundError("No 'remote' line found in the file.")
+
+        if change_needed:
+            with open(f"{self.save_path}/data/{user}/client.ovpn", "w") as file:
+                file.writelines(modified_lines)
+            logger.info(
+                f"IP address and port in the 'remote' line of {f'{self.save_path}/data/{user}/client.ovpn'} have been successfully modified."
+            )
+        else:
+            logger.info(
+                f"No change needed for {user}. The IP address and port are already correct."
+            )

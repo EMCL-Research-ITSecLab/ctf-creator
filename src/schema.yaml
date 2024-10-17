@@ -16,3 +16,4 @@ host:
 container:
   image: str(required=True)
   enviroment: list(str(), required=False)
+  name: str(required=True)

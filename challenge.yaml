@@ -20,10 +20,14 @@ name: Exercise 1
 containers:
   # - ghcr.io/emcl-research-itseclab/itsec-1-exercises:main-wireshark-1
   - image: nginx:latest
+    name: nginx
 
 # Usernames/ Uni-IDs
 users:
-  - tz251
+  - ty271
+  # - tz251
+  # - td214
+  # - tg231
 
 # For SSH Connection with user in Terminal
 # E.g. user@hostIPadress
