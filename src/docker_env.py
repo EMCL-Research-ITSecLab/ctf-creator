@@ -329,37 +329,3 @@ class Docker:
             container.exec_run(cmd=sed_cmd)
 
         container.restart()
-
-        # if not os.path.exists(file_path):
-        #     print(f"File {file_path} does not exist.")
-        #     return
-
-        # modified_lines = []
-
-        # with open(file_path, "r") as file:
-        #     lines = file.readlines()
-
-        # remote_line_found = False
-
-        # for line in lines:
-        #     if line.startswith("remote "):
-        #         parts = line.split()
-        #         if len(parts) == 3:
-        #             parts[-1] = str(new_port)
-        #             line = " ".join(parts) + "\n"
-        #             remote_line_found = True
-
-        #         modified_lines.append(line)
-        #         modified_lines.append("route-nopull\n")
-        #         modified_lines.append(f"route {new_route_ip}\n")
-        #         modified_lines.append('pull-filter ignore "redirect-gateway"\n')
-        #         modified_lines.append('pull-filter ignore "dhcp-option"\n')
-        #         modified_lines.append('pull-filter ignore "route"\n')
-        #     else:
-        #         modified_lines.append(line)
-
-        # if not remote_line_found:
-        #     raise RemoteLineNotFoundError("No 'remote' line found in the file.")
-
-        # with open(file_path, "w") as file:
-        #     file.writelines(modified_lines)
