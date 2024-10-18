@@ -1,4 +1,5 @@
 import os
+import random
 import sys
 from typing import List
 import yamale
@@ -130,7 +131,7 @@ class CTFCreator:
         logger.info("Begin set up of challenge.")
 
         http_port = 40000
-        openvpn_port = 50000
+        openvpn_port = 45000
         challenge_counter = 1
         next_network = self.subnet
 
@@ -185,9 +186,17 @@ class CTFCreator:
                     subnet=next_network,
                 )
 
+            used_ip = []
             for idx, container in enumerate(self.config.get("containers")):
+                used = True
+                while used:
+                    random_ip = random.randint(3, 254)
+                    if not random_ip in used_ip:
+                        used_ip.append(random_ip)
+                        used = False
+                logger.info(f"Randomized port {random_ip}")
                 host.start_container(
-                    user=user, container=container, subnet=next_network, index=idx
+                    user=user, container=container, subnet=next_network, index=random_ip
                 )
 
             self._write_readme(

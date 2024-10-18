@@ -324,8 +324,10 @@ class Docker:
         container = self.client.containers.get(f"{user}_openvpn")
         delete_old = [
             "sed -i '/push \"redirect-gateway/d' /etc/openvpn/server.conf",
+            "sed -i '/push \"dhcp-option DNS/d' /etc/openvpn/server.conf",
             f"sed -i '$ a\\push \"route {subnet.network_address} 255.255.255.0\"' >> /etc/openvpn/server.conf",
             "sed -i '$ a\\route-nopull' >> /etc/openvpn/server.conf",
+            "sed -i '$ a\\pull-filter ignore redirect-gateway' >> /etc/openvpn/server.conf",
         ]
         for sed_cmd in delete_old:
             container.exec_run(cmd=sed_cmd)

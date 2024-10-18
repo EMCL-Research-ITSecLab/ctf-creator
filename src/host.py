@@ -275,7 +275,7 @@ class Host:
             container_name=f"{user_filtered}_{container['name']}_" + f"{index}",
             network_name=f"{user_filtered}_network",
             image=container["image"],
-            host_address=str(subnet.network_address + 3 + index),
+            host_address=str(subnet.network_address + index),
         )
 
     def _modify_ovpn_client(self, user: str, port: int) -> None:
