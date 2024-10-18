@@ -23,6 +23,7 @@ class RemoteLineNotFoundError(Exception):
 
 class Host:
     def __init__(self, host: dict, save_path: str) -> None:
+        self.host = host
         self.username = host.get("username")
         self.ip = ip_address(host.get("ip"))
         logger.info(f"Check connection for {self.username}@{self.ip}")

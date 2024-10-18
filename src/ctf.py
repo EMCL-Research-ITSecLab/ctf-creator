@@ -61,6 +61,7 @@ class CTFCreator:
     def _get_hosts(self) -> List:
         hosts = []
         for host in self.config.get("hosts"):
+            logger.info(f"Clean up for host {host}")
             host_object = Host(host=host, save_path=self.save_path)
             hosts.append(host_object)
             host_object.clean_up()
