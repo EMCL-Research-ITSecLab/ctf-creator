@@ -35,4 +35,4 @@ hosts:
     username: debian
     identity_file: /Users/stefan/.ssh/hiscout
 
-subnet: 10.13.0.0/24
+subnet: 10.14.0.0/24

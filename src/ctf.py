@@ -108,8 +108,9 @@ class CTFCreator:
         logger.info("Check if containers and OpenVPN exists...")
         
         running=True
-        for container in self.config.get("containers"):
-            if not host.container_exists(user=user, container=container):
+        for test_container in self.config.get("containers"):
+            container_name = test_container['name']
+            if not host.container_exists(user=user, container=container_name):
                 running = False
         if not host.container_exists(user=user, container="openvpn"):
             running = False
@@ -120,8 +121,9 @@ class CTFCreator:
             logger.info(f"Remove containers, not all are up and running for {user}")
             host.network_remove(user=user)
             host.container_remove(user=user, container="openvpn")
-            for container in self.config.get("containers"):
-                host.container_remove(user=user, container=container)
+            for test_container in self.config.get("containers"):
+                container_name = test_container['name']
+                host.container_remove(user=user, container=container_name)
 
         return running
 
@@ -206,7 +208,7 @@ class CTFCreator:
 
     def _start_containers(self, user: str, host: Host, subnet: IPv4Network | IPv6Network):
         used_ip = []
-        for idx, container in enumerate(self.config.get("containers")):
+        for container in self.config.get("containers"):
             used = True
             while used:
                 random_ip = random.randint(3, 254)

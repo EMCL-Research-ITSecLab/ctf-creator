@@ -24,7 +24,7 @@ class Docker:
     def __init__(self, host: dict) -> None:
         self.username = host.get("username")
         self.ip = ip_address(host.get("ip"))
-        self.client = DockerClient(base_url=f"ssh://{self.username}@{self.ip}")
+        self.client = DockerClient(base_url=f"ssh://{self.username}@{self.ip}", use_ssh_client=True)
 
     def prune(self):
         try:
@@ -109,6 +109,7 @@ class Docker:
                 restart_policy={
                     "name": "always"
                 },
+                cpu_quota=1000
             )
             return container
         except APIError as e:
@@ -272,6 +273,9 @@ class Docker:
                 },
                 networking_config={network_name: endpoint_config},
                 volumes=[f"{mount_path}:/opt/Dockovpn_data"],
+                mem_limit="256m",
+                memswap_limit=0,
+                cpu_quota=1000
             )
 
             return container

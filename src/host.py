@@ -280,7 +280,7 @@ class Host:
             network = self.docker.client.networks.get(f"{user_filtered}_network")
             network.remove()
         except APIError:
-            logger.warning(f"Container {user_filtered} not found.")
+            logger.warning(f"Network {user_filtered}_network not found.")
 
 
     def start_openvpn(
