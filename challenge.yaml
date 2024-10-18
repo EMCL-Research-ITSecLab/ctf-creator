@@ -22,6 +22,8 @@ containers:
   - image: nginx:latest
     name: nginx
 
+secret: LqPbXZWFna2D4jmJXEyAj9pNDCpDJp7XTFYo
+
 # Usernames/ Uni-IDs
 users:
   - stefan.machmeier@uni-heidelberg.de

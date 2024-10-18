@@ -6,7 +6,7 @@ import yamale
 import click
 import pathlib
 
-from ipaddress import ip_network
+from ipaddress import IPv4Network, IPv6Network, ip_network
 from yamale import YamaleError
 from yamale.validators import DefaultValidators
 
@@ -102,13 +102,13 @@ class CTFCreator:
             logger.error("Failed to extract all necessary information.")
             return None
 
-    def _write_readme(self, user: str, path: str) -> None:
+    def _write_readme(self, user: str, path: str, subnet: IPv4Network | IPv6Network) -> None:
         with open(
             f"{os.path.dirname(os.path.realpath(__file__))}/README.md.template", "r"
         ) as file:
             readme_content = file.read()
 
-        readme_content = readme_content.format(user=user)
+        readme_content = readme_content.format(user=user, subnet=subnet)
 
         logger.debug(
             "Add the reachable container IP addresses based on the length of the containers list"
@@ -197,12 +197,16 @@ class CTFCreator:
                         used = False
                 logger.info(f"Randomized port {random_ip}")
                 host.start_container(
-                    user=user, container=container, subnet=next_network, index=random_ip
+                    user=user, container=container, subnet=next_network, index=random_ip, environment={
+                        "USER": user,
+                        "SECRET": self.config.get("secret")
+                    }
                 )
 
             self._write_readme(
                 path=f"{self.save_path}/data/{user}/",
-                user=user                
+                user=user,
+                subnet=next_network                
             )
 
             next_network = ip_network(

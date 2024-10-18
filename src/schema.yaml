@@ -4,6 +4,7 @@ containers: list(include('container'), required=True)  # List of Docker containe
 users: list(str(), required=True, unique=True)  # List of users (should be unique)
 hosts: list(include('host'), required=True)  # List of hosts
 subnet: ip(required=True)  # subnet
+secret: str(required=True)
 
 ---
 host:

@@ -269,11 +269,11 @@ class Host:
         self.docker.modify_ovpn_server(user=user_filtered, subnet=subnet)
 
     def start_container(
-        self, user: str, container: dict, subnet: IPv4Network | IPv6Network, index: int
+        self, user: str, container: dict, subnet: IPv4Network | IPv6Network, index: int, environment: dict
     ) -> None:
         user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
         self.docker.create_container(
-            user=user,
+            environment=environment,
             container_name=f"{user_filtered}_{container['name']}_" + f"{index}",
             network_name=f"{user_filtered}_network",
             image=container["image"],

@@ -69,7 +69,7 @@ class Docker:
             )
 
     def create_container(
-        self, user: str, network_name: str, host_address: str, container_name: str, image: str
+        self, environment: dict, network_name: str, host_address: str, container_name: str, image: str
     ) -> None:
         """
         Create a Docker container with a specific name, image, and static IP address.
@@ -95,18 +95,20 @@ class Docker:
                 name=container_name,
                 network=network_name,
                 networking_config={network_name: endpoint_config},
-                environment={
-                    "USER": user,
-                },
+                environment=environment,
                 security_opt=["no-new-privileges"],
-                read_only=True,
+                # read_only=True,
                 tmpfs={
                     "/var/run": "",
                     "/var/cache": "",
                     "/var/cache/nginx":"",
                     "/tmp": ""
-                }
-
+                },
+                mem_limit="128m",
+                memswap_limit=0,
+                restart_policy={
+                    "name": "always"
+                },
             )
             return container
         except APIError as e:

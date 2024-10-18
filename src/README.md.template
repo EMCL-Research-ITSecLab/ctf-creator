@@ -2,11 +2,13 @@
 
 Dear {user},
 
-Each flag you capture brings you one step closer to victory, but beware—every puzzle is more cunning than the last.
+Each flag you capture brings you one step closer to victory, but beware — every puzzle is more cunning than the last.
 To connect to the desired exercise, use the following command: `sudo openvpn client.ovpn`
 
 Once connected, you can only reach the Docker containers within the subnet.
 Be aware, the IP addresses are not statically set, each user has different IPs for the challenge.
+
+Your subnet is: {subnet}
 
 Good luck, and may the flags be ever in your favor!
 
