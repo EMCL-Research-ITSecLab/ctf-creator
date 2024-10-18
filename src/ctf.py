@@ -216,7 +216,7 @@ class CTFCreator:
 @click.option(
     "--save",
     required=True,
-    help="The path where you want to save the user data for the CTF-Creator. E.g. /home/nick/ctf-creator",
+    help="The path where you want to save the user data for the CTF-Creator. E.g. /home/debian/ctf-creator",
     type=click.Path(writable=True),
 )
 def main(config, save):

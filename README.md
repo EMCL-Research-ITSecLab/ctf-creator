@@ -36,8 +36,19 @@ source .venv/bin/activate
 
 ### Input requirements
 
-An example YAML config file named test.yaml is available in the src directory to illustrate the required structure.
-Provide a **save path** where user data will be saved or is already saved:
+An example YAML config file named `challenge.yaml` is available in the root directory to illustrate the required structure.
+
+```sh
+$ python3 src/ctf.py
+Usage: ctf.py [OPTIONS]
+
+Options:
+  --config FILENAME  The path to the .yaml configuration file for the CTF-
+                     Creator.  [required]
+  --save PATH        The path where you want to save the user data for the
+                     CTF-Creator. E.g. /home/debian/ctf-creator  [required]
+  --help             Show this message and exit.
+```
 
 Sufficient memory space and the necessary system permissions are required to save the configuration files for each CTF environment user on the system running the CTF-Creator. The amount of space needed will depend on the number of users in the CTF environment, with an estimated space requirement of 140 KB per user.
 
@@ -55,16 +66,17 @@ sudo usermod -aG docker $(whoami) && newgrp docker
 ```
 
 The hosts need to support SSH connections using asymmetric public and private keys for secure remote access.
-
-## Usage
+Verify that `ssh-agent` is running
 
 ```sh
-python3 src/ctf-main.py
+eval "$(ssh-agent)"
 ```
 
-Provide the location of your YAML configuration file and where you want to store the created data for the connection to the CTF environment on your device.
+Add SSH keys to agent:
 
-Due to the use of an SSH agent for the Connection to the hosts, you will also be prompted to enter your terminal password.
+```sh
+ssh-add /path/to/identity
+```
 
 ### Use Cases
 
@@ -81,6 +93,7 @@ For every use case, the list of deploying Docker containers can be changed.
 For any other use case scenario please start a fresh set up.
 
 ## Testing
+
 To run all tests at once you can run this command in the terminal in the main folder `ctf-creator/`:
 
 ```sh
@@ -91,7 +104,8 @@ python3 -m pytest -v
 
 #### Main Function Overview
 
-The main function of the CTF-Creator tool, located in src/ctf_main.py, serves as the core component responsible for setting up the entire CTF environment. It reads configurations from a YAML file, connects to specified hosts via SSH, and deploys Docker containers and networks uniformly across all hosts according to the provided specifications, utilizing various helper functions and external libraries such as Docker SDK, PyYAML, and Click.
+The main function of the CTF-Creator tool, located in `src/ctf.py`, serves as the core component responsible for setting up the entire CTF environment.
+It reads configurations from a YAML file, connects to specified hosts via SSH, and deploys Docker containers and networks uniformly across all hosts according to the provided specifications, utilizing various helper functions and external libraries such as Docker SDK, PyYAML, and Click.
 
 Key Functionalities:
 
@@ -99,16 +113,13 @@ Key Functionalities:
 2. SSH Connection Initialization
 3. Host Reachability and SSH Connectivity Check
 4. Cleanup of Existing Docker Containers and Networks
-5. Subnet Calculation and Network Setup
-6. OpenVPN Server Setup
-7. OpenVPN Configuration Management
-8. Docker Container Deployment
-9. Documentation and Output Generation
-10. Error Handling and Logging
+5. OpenVPN Server Setup
+6. OpenVPN Configuration Management
+7. Docker Container Deployment
+8. Documentation and Output Generation
+9. Error Handling and Logging
 
 ## Credits
-
-This is the CTF-Creator programmed by Nick Nötzel under the supervision of Stefan Machmeier.
 
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 

@@ -24,10 +24,7 @@ containers:
 
 # Usernames/ Uni-IDs
 users:
-  - ty271
-  # - tz251
-  # - td214
-  # - tg231
+  - stefan.machmeier@uni-heidelberg.de
 
 # For SSH Connection with user in Terminal
 # E.g. user@hostIPadress
