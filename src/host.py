@@ -272,6 +272,7 @@ class Host:
     ) -> None:
         user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
         self.docker.create_container(
+            user=user,
             container_name=f"{user_filtered}_{container['name']}_" + f"{index}",
             network_name=f"{user_filtered}_network",
             image=container["image"],

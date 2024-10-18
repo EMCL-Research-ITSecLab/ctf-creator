@@ -6,3 +6,4 @@ pre-commit
 colorlog
 coverage
 pytest
+yamale

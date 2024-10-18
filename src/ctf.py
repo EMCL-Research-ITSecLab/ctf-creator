@@ -170,7 +170,7 @@ class CTFCreator:
                 host.start_openvpn(
                     user=user,
                     openvpn_port=existing_openvpn_port,
-                    http_port=http_port,
+                    http_port=http_port + challenge_counter,
                     subnet=next_network,
                 )
 
