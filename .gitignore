@@ -11,8 +11,8 @@ src/'ctf_main _copy'
 
 # Ignore the for_me directory
 for_me/
-
-
+test_data
+.DS_Store
 # C extensions
 *.so
 

@@ -1,13 +1,15 @@
-# OpenVPN Connection Instructions
+# Welcome to the IT-Security Capture the Flag (CTF) Games!
 
 Dear {user},
 
+Each flag you capture brings you one step closer to victory, but beware—every puzzle is more cunning than the last.
+To connect to the desired exercise, use the following command: `sudo openvpn client.ovpn`
 
-To connect to the desired subnet, use the following command: "sudo openvpn client.ovpn"
-
-Once connected, you can only reach the Docker containers within the subnet. The possible reachable IP addresses with `ping` are:
-
-- {subnet}.1
-- {subnet}.2
+Once connected, you can only reach the Docker containers within the subnet.
+Be aware, the IP addresses are not statically set, each user has different IPs for the challenge.
 
 Good luck, and may the flags be ever in your favor!
+
+## Details
+
+Connection has been tested with OpenVPN version: `2.5.11`

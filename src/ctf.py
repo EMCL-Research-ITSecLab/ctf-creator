@@ -100,19 +100,17 @@ class CTFCreator:
             logger.error("Failed to extract all necessary information.")
             return None
 
-    def _write_readme(self, path: str, subnet: str, containers: List):
+    def _write_readme(self, user: str, path: str) -> None:
         with open(
             f"{os.path.dirname(os.path.realpath(__file__))}/README.md.template", "r"
         ) as file:
             readme_content = file.read()
 
-        readme_content = readme_content.format(subnet=subnet)
+        readme_content = readme_content.format(user=user)
 
         logger.debug(
             "Add the reachable container IP addresses based on the length of the containers list"
         )
-        for i in range(1, len(containers) + 1):
-            readme_content += f"\n- {subnet}.{2 + i}"
 
         logger.debug("Ensure the directory exists")
         os.makedirs(path, exist_ok=True)
@@ -194,8 +192,7 @@ class CTFCreator:
 
             self._write_readme(
                 path=f"{self.save_path}/data/{user}/",
-                subnet=next_network,
-                containers=self.config.get("containers"),
+                user=user                
             )
 
             next_network = ip_network(
