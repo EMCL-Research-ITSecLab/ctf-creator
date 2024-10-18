@@ -20,8 +20,9 @@ logger = get_logger("ctf_creator.ctf")
 
 
 class CTFCreator:
-    def __init__(self, config: str, save_path: str) -> None:
+    def __init__(self, config: str, save_path: str, prune: bool) -> None:
         self.config = self._get_config(config)
+        self.prune = prune
         logger.info(f"Containers: {self.config.get('containers')}")
         logger.info(f"Users: {self.config.get('users')}")
         logger.info(f"Key: {self.config.get('key')}")
@@ -64,7 +65,8 @@ class CTFCreator:
             logger.info(f"Clean up for host {host}")
             host_object = Host(host=host, save_path=self.save_path)
             hosts.append(host_object)
-            host_object.clean_up()
+            if self.prune:
+                host_object.clean_up()
         return hosts
 
     def _extract_ovpn_info(self, file_path):
@@ -101,37 +103,34 @@ class CTFCreator:
         else:
             logger.error("Failed to extract all necessary information.")
             return None
+    
+    def _check_running(self, user: str, host: Host):
+        logger.info("Check if containers and OpenVPN exists...")
+        
+        running=True
+        for container in self.config.get("containers"):
+            if not host.container_exists(user=user, container=container):
+                running = False
+        if not host.container_exists(user=user, container="openvpn"):
+            running = False
 
-    def _write_readme(self, user: str, path: str, subnet: IPv4Network | IPv6Network) -> None:
-        with open(
-            f"{os.path.dirname(os.path.realpath(__file__))}/README.md.template", "r"
-        ) as file:
-            readme_content = file.read()
+        if running:
+            logger.info(f"All are up and running for {user}")
+        if not running:
+            logger.info(f"Remove containers, not all are up and running for {user}")
+            host.network_remove(user=user)
+            host.container_remove(user=user, container="openvpn")
+            for container in self.config.get("containers"):
+                host.container_remove(user=user, container=container)
 
-        readme_content = readme_content.format(user=user, subnet=subnet)
-
-        logger.debug(
-            "Add the reachable container IP addresses based on the length of the containers list"
-        )
-
-        logger.debug("Ensure the directory exists")
-        os.makedirs(path, exist_ok=True)
-
-        logger.debug("Write the README.md file to the specified location.")
-        readme_file_path = os.path.join(path, "README.md")
-        try:
-            with open(readme_file_path, "w") as readme_file:
-                readme_file.write(readme_content.strip())
-        except OSError as e:
-            logger.error(f"Error writing README.md file: {e}")
-            raise
+        return running
 
     def create_challenge(self):
         logger.info("Set up hosts.")
         self.hosts = self._get_hosts()
         logger.info("Begin set up of challenge.")
 
-        http_port = 40000
+        http_port = 44000
         openvpn_port = 45000
         challenge_counter = 1
         next_network = self.subnet
@@ -159,27 +158,35 @@ class CTFCreator:
                 logger.info(
                     f"Data for the user: {user} will NOT be changed. Starting OVPN Docker container with existing data."
                 )
+                
+                # TODO Extract subnet
                 ip, existing_openvpn_port = self._extract_ovpn_info(
                     f"{self.save_path}/data/{user}/client.ovpn"
                 )
 
-                logger.info(f"Get host with IP {ip}")
                 host: Host = [d for d in self.hosts if str(d.ip) == ip][0]
+                logger.info(f"Deploy on host: {host.ip}")
 
-                host.send_and_extract_tar(user=user)
 
-                host.start_openvpn(
-                    user=user,
-                    openvpn_port=existing_openvpn_port,
-                    http_port=http_port + challenge_counter,
-                    subnet=next_network,
-                )
+                if not self._check_running(user=user, host=host):
 
+                    host.send_and_extract_tar(user=user)
+
+                    host.start_openvpn(
+                        user=user,
+                        openvpn_port=existing_openvpn_port,
+                        http_port=http_port + challenge_counter,
+                        subnet=next_network,
+                    )
+
+                    self._start_containers(host=host, subnet=next_network, user=user)
             else:
                 logger.info(
                     f"For the user: {user}, an OpenVPN configuration file will be generated!"
                 )
                 host: Host = self.hosts[idx % len(self.hosts)]
+                logger.info(f"Deploy on host: {host.ip}")
+                
                 host.start_openvpn(
                     user=user,
                     openvpn_port=openvpn_port + challenge_counter,
@@ -187,27 +194,8 @@ class CTFCreator:
                     subnet=next_network,
                 )
 
-            used_ip = []
-            for idx, container in enumerate(self.config.get("containers")):
-                used = True
-                while used:
-                    random_ip = random.randint(3, 254)
-                    if not random_ip in used_ip:
-                        used_ip.append(random_ip)
-                        used = False
-                logger.info(f"Randomized port {random_ip}")
-                host.start_container(
-                    user=user, container=container, subnet=next_network, index=random_ip, environment={
-                        "USER": user,
-                        "SECRET": self.config.get("secret")
-                    }
-                )
+                self._start_containers(host=host, subnet=next_network, user=user)
 
-            self._write_readme(
-                path=f"{self.save_path}/data/{user}/",
-                user=user,
-                subnet=next_network                
-            )
 
             next_network = ip_network(
                 (int(next_network.network_address) + next_network.num_addresses),
@@ -216,6 +204,22 @@ class CTFCreator:
             next_network = next_network.supernet(new_prefix=24)
             challenge_counter += 1
 
+    def _start_containers(self, user: str, host: Host, subnet: IPv4Network | IPv6Network):
+        used_ip = []
+        for idx, container in enumerate(self.config.get("containers")):
+            used = True
+            while used:
+                random_ip = random.randint(3, 254)
+                if not random_ip in used_ip:
+                    used_ip.append(random_ip)
+                    used = False
+            logger.info(f"Randomized port {random_ip}")
+            host.start_container(
+                user=user, container=container, subnet=subnet, index=random_ip, environment={
+                    "USER": user,
+                    "SECRET": self.config.get("secret")
+                }
+            )
 
 @click.command()
 @click.option(
@@ -230,8 +234,15 @@ class CTFCreator:
     help="The path where you want to save the user data for the CTF-Creator. E.g. /home/debian/ctf-creator",
     type=click.Path(writable=True),
 )
-def main(config, save):
-    ctfcreator = CTFCreator(config=config.read(), save_path=save)
+@click.option(
+    "--prune",
+    default=False,
+    is_flag=True,
+    help="Prunes all running containers on the host machine.",
+    show_default=True,
+)
+def main(config, save, prune):
+    ctfcreator = CTFCreator(config=config.read(), save_path=save, prune=prune)
     ctfcreator.create_challenge()
 
 

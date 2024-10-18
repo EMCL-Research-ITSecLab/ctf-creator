@@ -3,6 +3,7 @@ import sys
 import os
 from typing import List
 
+from docker.errors import APIError
 from ipaddress import IPv4Network, IPv6Network
 from paramiko import SSHClient, AutoAddPolicy
 from ipaddress import ip_address
@@ -233,6 +234,55 @@ class Host:
             logger.info("Closing the SSH connection...")
             ssh.close()
 
+    def _write_readme(self, user: str, path: str, subnet: IPv4Network | IPv6Network) -> None:
+        with open(
+            f"{os.path.dirname(os.path.realpath(__file__))}/README.md.template", "r"
+        ) as file:
+            readme_content = file.read()
+
+        readme_content = readme_content.format(user=user, subnet=subnet)
+
+        logger.debug(
+            "Add the reachable container IP addresses based on the length of the containers list"
+        )
+
+        logger.debug("Ensure the directory exists")
+        os.makedirs(path, exist_ok=True)
+
+        logger.debug("Write the README.md file to the specified location.")
+        readme_file_path = os.path.join(path, "README.md")
+        try:
+            with open(readme_file_path, "w") as readme_file:
+                readme_file.write(readme_content.strip())
+        except OSError as e:
+            logger.error(f"Error writing README.md file: {e}")
+            raise
+
+    def container_exists(self, user, container):
+        user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
+        try:
+            self.docker.client.containers.get(f"{user_filtered}_{container}")
+            return True
+        except APIError:
+            return False
+    
+    def container_remove(self, user, container):
+        user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
+        try:
+            container = self.docker.client.containers.get(f"{user_filtered}_{container}")
+            container.remove()
+        except APIError:
+            logger.warning(f"Container {user_filtered}_{container} not found.")
+
+    def network_remove(self, user):
+        user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
+        try:
+            network = self.docker.client.networks.get(f"{user_filtered}_network")
+            network.remove()
+        except APIError:
+            logger.warning(f"Container {user_filtered} not found.")
+
+
     def start_openvpn(
         self,
         user: str,
@@ -263,6 +313,12 @@ class Host:
                 http_port=http_port,
                 save_path=self.save_path,
             )
+            self._write_readme(
+                path=f"{self.save_path}/data/{user}/",
+                user=user,
+                subnet=subnet                
+            )
+
 
         self._modify_ovpn_client(user=user, port=openvpn_port)
 

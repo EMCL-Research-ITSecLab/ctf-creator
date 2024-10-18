@@ -121,7 +121,7 @@ class Docker:
         http_port: str,
         save_path: str,
         max_retries_counter=0,
-        max_retries=10,
+        max_retries=25,
     ) -> None:
         """
         Downloads a .conf version of the client OpenVPN configuration file from a specified URL with retry logic.
