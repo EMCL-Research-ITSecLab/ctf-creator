@@ -39,6 +39,7 @@ class Host:
 
         self.docker = Docker(host=host)
         self.save_path = save_path
+        self.containers = self.docker.client.containers.list(all=True)
 
     def _check_reachability(self):
         """
@@ -258,30 +259,54 @@ class Host:
             logger.error(f"Error writing README.md file: {e}")
             raise
 
+    
+    def get_container(self, user, container):
+        user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
+        try:
+            # self.docker.client.containers.get(f"{user_filtered}_{container}")
+            for con in self.containers:
+                if f"{user_filtered}_{container}" in con.name:
+                    return con
+            logger.warning(f"Container not found {user_filtered}_{container} on host {self.ip}")
+            return None
+        except APIError:
+            logger.warning(f"Could not find {user_filtered}_{container} on host {self.ip}")
+            return None
+    
     def container_exists(self, user, container):
         user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
         try:
-            self.docker.client.containers.get(f"{user_filtered}_{container}")
-            return True
+            # self.docker.client.containers.get(f"{user_filtered}_{container}")
+            for con in self.containers:
+                if f"{user_filtered}_{container}" in con.name:
+                    return True
+            logger.warning(f"Container not found {user_filtered}_{container} on host {self.ip}")
+            return False
         except APIError:
+            logger.warning(f"Could not find {user_filtered}_{container} on host {self.ip}")
             return False
     
     def container_remove(self, user, container):
         user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
         try:
-            container = self.docker.client.containers.get(f"{user_filtered}_{container}")
-            container.remove()
-        except APIError:
-            logger.warning(f"Container {user_filtered}_{container} not found.")
+            # container = self.docker.client.containers.get(f"{user_filtered}_{container}")
+            # container.remove()
+            for con in self.containers:
+                if f"{user_filtered}_{container}" in con.name:
+                    con.stop()
+                    con.remove()
+        except APIError as e:
+            logger.warning(f"Container {user_filtered}_{container} not found on host {self.ip}.")
+            logger.warning(f"Error {e}.")
 
     def network_remove(self, user):
         user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
         try:
             network = self.docker.client.networks.get(f"{user_filtered}_network")
             network.remove()
-        except APIError:
+        except APIError as e:
             logger.warning(f"Network {user_filtered}_network not found.")
-
+            logger.warning(f"Error {e}.")
 
     def start_openvpn(
         self,
@@ -330,7 +355,7 @@ class Host:
         user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
         self.docker.create_container(
             environment=environment,
-            container_name=f"{user_filtered}_{container['name']}_" + f"{index}",
+            container_name=f"{user_filtered}_{container['name']}" + f"{index}",
             network_name=f"{user_filtered}_network",
             image=container["image"],
             host_address=str(subnet.network_address + index),

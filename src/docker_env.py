@@ -275,7 +275,7 @@ class Docker:
                 volumes=[f"{mount_path}:/opt/Dockovpn_data"],
                 mem_limit="256m",
                 memswap_limit=0,
-                cpu_quota=1000
+                cpu_quota=100000
             )
 
             return container

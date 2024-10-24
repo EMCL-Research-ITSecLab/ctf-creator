@@ -119,11 +119,11 @@ class CTFCreator:
             logger.info(f"All are up and running for {user}")
         if not running:
             logger.info(f"Remove containers, not all are up and running for {user}")
-            host.network_remove(user=user)
             host.container_remove(user=user, container="openvpn")
             for test_container in self.config.get("containers"):
                 container_name = test_container['name']
                 host.container_remove(user=user, container=container_name)
+            host.network_remove(user=user)
 
         return running
 
@@ -141,16 +141,31 @@ class CTFCreator:
         for idx, user in enumerate(self.config.get("users")):
             if os.path.exists(f"{self.save_path}/data/{user}"):
                 logger.info(f"Check ports for user: {user}")
-                _, existing_openvpn_port = self._extract_ovpn_info(
+                ip, existing_openvpn_port = self._extract_ovpn_info(
                     f"{self.save_path}/data/{user}/client.ovpn"
                 )
                 ports_in_use.append(existing_openvpn_port)
+
+                host: Host = [d for d in self.hosts if str(d.ip) == ip][0]
+                con = host.get_container(user, "openvpn")
+                if con != None:
+                    logger.debug(f"Container: {con.name}")
+                    if con.ports:
+                        for port, bindings in con.ports.items():
+                            logger.debug(f"  Port {port}:")
+                            for binding in bindings:
+                                logger.debug(f"    - Host IP: {binding['HostIp']}, Host Port: {binding['HostPort']}")
+                                ports_in_use.append(binding['HostPort'])
+                    else:
+                        logger.debug("  No ports allocated.")
+
+
         logger.info(f"Ports in use: {ports_in_use}")
 
         for idx, user in enumerate(self.config.get("users")):
             in_use = True
             while in_use:
-                if not (openvpn_port + challenge_counter) in ports_in_use:
+                if (not (str(openvpn_port + challenge_counter)) in ports_in_use) and (not (str(http_port + challenge_counter)) in ports_in_use):
                     in_use = False
                 else:
                     challenge_counter += 1
@@ -186,17 +201,20 @@ class CTFCreator:
                 logger.info(
                     f"For the user: {user}, an OpenVPN configuration file will be generated!"
                 )
+                host: Host = self.hosts[-1]
                 host: Host = self.hosts[idx % len(self.hosts)]
-                logger.info(f"Deploy on host: {host.ip}")
-                
-                host.start_openvpn(
-                    user=user,
-                    openvpn_port=openvpn_port + challenge_counter,
-                    http_port=http_port + challenge_counter,
-                    subnet=next_network,
-                )
+                # logger.info(f"Deploy on host: {host.ip}")
 
-                self._start_containers(host=host, subnet=next_network, user=user)
+                if not self._check_running(user=user, host=host):
+                    
+                    host.start_openvpn(
+                        user=user,
+                        openvpn_port=openvpn_port + challenge_counter,
+                        http_port=http_port + challenge_counter,
+                        subnet=next_network,
+                    )
+
+                    self._start_containers(host=host, subnet=next_network, user=user)
 
 
             next_network = ip_network(
