@@ -361,6 +361,18 @@ class Host:
             host_address=str(subnet.network_address + index),
         )
 
+    def start_kali(
+        self, user: str, subnet: IPv4Network | IPv6Network, index: int, command: list
+    ) -> None:
+        user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
+        self.docker.create_kali(
+            command=command,
+            container_name=f"{user_filtered}_kali",
+            network_name=f"{user_filtered}_network",
+            image="ghcr.io/emcl-research-itseclab/itsec-1-exercises:main-kali",
+            host_address=str(subnet.network_address + index),
+        )
+
     def _modify_ovpn_client(self, user: str, port: int) -> None:
         """
         Changes the IP address and port in the 'remote' line of an OpenVPN configuration file

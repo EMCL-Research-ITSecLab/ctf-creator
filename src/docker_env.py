@@ -109,7 +109,48 @@ class Docker:
                 restart_policy={
                     "name": "always"
                 },
-                cpu_quota=1000
+                cpu_quota=1000,
+            )
+            return container
+        except APIError as e:
+            logger.error(f"Error creating container: {e}")
+            raise
+
+    def create_kali(
+        self, command: list, network_name: str, host_address: str, container_name: str, image: str
+    ) -> None:
+        """
+        Create a Docker container with a specific name, image, and static IP address.
+
+        Args:
+            network_name (str): The name of the network to connect the container to.
+            name (str): The name of the container to create (must be unique).
+            image (str): The Docker image to use for the container.
+
+        Returns:
+            docker.models.containers.Container: The created Docker container.
+
+        Raises:
+            docker.errors.APIError: If an error occurs during the container creation process.
+        """
+        self._check_image_existence(image_name=image)
+
+        endpoint_config = EndpointConfig(version="1.44", ipv4_address=host_address)
+        try:
+            container = self.client.containers.run(
+                image,
+                detach=True,
+                name=container_name,
+                network=network_name,
+                networking_config={network_name: endpoint_config},
+                command=command,
+                cap_add=["NET_ADMIN", "NET_RAW"],
+                mem_limit="512m",
+                memswap_limit=0,
+                restart_policy={
+                    "name": "always"
+                },
+                cpu_quota=50000,
             )
             return container
         except APIError as e:
@@ -164,6 +205,7 @@ class Docker:
         except Exception as e:
             logger.error(f"Error: An unexpected error occurred - {e}")
             raise DownloadError(f"An unexpected error occurred - {e}")
+                
 
     def get_openvpn_config(
         self, user: str, http_port: int, container_name: str, save_path: str

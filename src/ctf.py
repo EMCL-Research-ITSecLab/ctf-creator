@@ -201,9 +201,8 @@ class CTFCreator:
                 logger.info(
                     f"For the user: {user}, an OpenVPN configuration file will be generated!"
                 )
-                host: Host = self.hosts[-1]
                 host: Host = self.hosts[idx % len(self.hosts)]
-                # logger.info(f"Deploy on host: {host.ip}")
+                logger.info(f"Deploy on host: {host.ip}")
 
                 if not self._check_running(user=user, host=host):
                     
@@ -215,7 +214,8 @@ class CTFCreator:
                     )
 
                     self._start_containers(host=host, subnet=next_network, user=user)
-
+            
+            self._start_kalibox(user=user, host=host, subnet=next_network)
 
             next_network = ip_network(
                 (int(next_network.network_address) + next_network.num_addresses),
@@ -229,7 +229,7 @@ class CTFCreator:
         for container in self.config.get("containers"):
             used = True
             while used:
-                random_ip = random.randint(3, 254)
+                random_ip = random.randint(4, 254)
                 if not random_ip in used_ip:
                     used_ip.append(random_ip)
                     used = False
@@ -240,6 +240,12 @@ class CTFCreator:
                     "SECRET": self.config.get("secret")
                 }
             )
+    
+    def _start_kalibox(self,  user: str, host: Host, subnet: IPv4Network | IPv6Network):
+        logger.info(f"Start kalibox on {str(subnet.network_address + 3)}")
+        host.start_kali(
+            user=user, subnet=subnet, index=3, command=[self.config.get("secret"), "kali"]
+        )
 
 @click.command()
 @click.option(
