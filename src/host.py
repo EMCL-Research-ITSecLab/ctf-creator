@@ -16,12 +16,6 @@ from src.docker_env import Docker
 logger = get_logger("ctf_creator.host")
 
 
-class RemoteLineNotFoundError(Exception):
-    """Custom exception raised when no 'remote' line is found in the OpenVPN configuration file."""
-
-    pass
-
-
 class Host:
     def __init__(self, host: dict, save_path: str) -> None:
         self.host = host
@@ -39,7 +33,8 @@ class Host:
 
         self.docker = Docker(host=host)
         self.save_path = save_path
-        self.containers = self.docker.client.containers.list(all=True)
+        output, _ = self._execute_ssh_command(command="docker ps --format '{{.Names}}'")
+        self.containers = output.replace("\r", "").split("\n")
 
     def _check_reachability(self):
         """
@@ -120,15 +115,10 @@ class Host:
             # Connect to the remote host using SSH agent for authentication
             ssh.connect(str(self.ip), port=22, username=self.username)
             # Execute the command
-            stdin, stdout, stderr = ssh.exec_command(command)
+            stdin, stdout, stderr = ssh.exec_command(command, get_pty=True)
             # Read the output and error streams
             output = stdout.read().decode()
             error = stderr.read().decode()
-            # Print the output and error (if any)
-            if output:
-                logger.info("Output:\n", output)
-            if error:
-                logger.error("Error:\n", error)
 
             return output, error
 
@@ -235,68 +225,44 @@ class Host:
             logger.info("Closing the SSH connection...")
             ssh.close()
 
-    def _write_readme(self, user: str, path: str, subnet: IPv4Network | IPv6Network) -> None:
-        with open(
-            f"{os.path.dirname(os.path.realpath(__file__))}/README.md.template", "r"
-        ) as file:
-            readme_content = file.read()
-
-        readme_content = readme_content.format(user=user, subnet=subnet)
-
-        logger.debug(
-            "Add the reachable container IP addresses based on the length of the containers list"
-        )
-
-        logger.debug("Ensure the directory exists")
-        os.makedirs(path, exist_ok=True)
-
-        logger.debug("Write the README.md file to the specified location.")
-        readme_file_path = os.path.join(path, "README.md")
-        try:
-            with open(readme_file_path, "w") as readme_file:
-                readme_file.write(readme_content.strip())
-        except OSError as e:
-            logger.error(f"Error writing README.md file: {e}")
-            raise
-
-    
     def get_container(self, user, container):
         user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
         try:
-            # self.docker.client.containers.get(f"{user_filtered}_{container}")
             for con in self.containers:
-                if f"{user_filtered}_{container}" in con.name:
-                    return con
-            logger.warning(f"Container not found {user_filtered}_{container} on host {self.ip}")
+                if f"{user_filtered}_{container}" in con:
+                    return self.docker.client.containers.get(con)
+            logger.warning(
+                f"Container not found {user_filtered}_{container} on host {self.ip}"
+            )
             return None
         except APIError:
-            logger.warning(f"Could not find {user_filtered}_{container} on host {self.ip}")
+            logger.warning(
+                f"Could not find {user_filtered}_{container} on host {self.ip}"
+            )
             return None
-    
+
     def container_exists(self, user, container):
         user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
-        try:
-            # self.docker.client.containers.get(f"{user_filtered}_{container}")
-            for con in self.containers:
-                if f"{user_filtered}_{container}" in con.name:
-                    return True
-            logger.warning(f"Container not found {user_filtered}_{container} on host {self.ip}")
-            return False
-        except APIError:
-            logger.warning(f"Could not find {user_filtered}_{container} on host {self.ip}")
-            return False
-    
+        for con in self.containers:
+            if f"{user_filtered}_{container}" in con:
+                return True
+        logger.warning(
+            f"Container not found {user_filtered}_{container} on host {self.ip}"
+        )
+        return False
+
     def container_remove(self, user, container):
         user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
         try:
-            # container = self.docker.client.containers.get(f"{user_filtered}_{container}")
-            # container.remove()
             for con in self.containers:
-                if f"{user_filtered}_{container}" in con.name:
-                    con.stop()
-                    con.remove()
+                if f"{user_filtered}_{container}" in con:
+                    pcontainer = self.docker.client.containers.get(con)
+                    pcontainer.stop()
+                    pcontainer.remove()
         except APIError as e:
-            logger.warning(f"Container {user_filtered}_{container} not found on host {self.ip}.")
+            logger.warning(
+                f"Container {user_filtered}_{container} not found on host {self.ip}."
+            )
             logger.warning(f"Error {e}.")
 
     def network_remove(self, user):
@@ -312,7 +278,6 @@ class Host:
         self,
         user: str,
         openvpn_port: int,
-        http_port: int,
         subnet: IPv4Network | IPv6Network,
     ):
         user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
@@ -327,35 +292,45 @@ class Host:
             network_name=f"{user_filtered}_network",
             container_name=f"{user_filtered}_openvpn",
             openvpn_port=openvpn_port,
-            http_port=http_port,
             mount_path=f"/home/{self.username}/ctf-data/{user}/Dockovpn_data/",
         )
 
-        if not os.path.exists(f"{self.save_path}/data/{user}"):
-            self.docker.get_openvpn_config(
-                user=user,
-                container_name=f"{user_filtered}_openvpn",
-                http_port=http_port,
-                save_path=self.save_path,
-            )
-            self._write_readme(
-                path=f"{self.save_path}/data/{user}/",
-                user=user,
-                subnet=subnet                
-            )
-
-
-        self._modify_ovpn_client(user=user, port=openvpn_port)
-
         self.docker.modify_ovpn_server(user=user_filtered, subnet=subnet)
 
+    def write_readme(self, user: str):
+        user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
+
+        # TODO If network already exists
+        # network = self.docker.client.networks.get(f"{user_filtered}_network")
+        # logger.debug("Get the IPAM configuration")
+        # ipam_config = network.attrs['IPAM']['Config']
+        # logger.debug("Iterate through the IPAM config to find the subnet")
+        # subnet = ""
+        # for config in ipam_config:
+        #     psubnet = config.get('Subnet')
+        #     if psubnet:
+        #         subnet = psubnet
+        #         logger.info(f"Update subnet information for {user} with {subnet}")
+
+        # logger.info(f"Update README.md of {user} with subnet {subnet}")
+        # self._write_readme(
+        #     path=f"{self.save_path}/data/{user}/",
+        #     user=user,
+        #     subnet=subnet
+        # )
+
     def start_container(
-        self, user: str, container: dict, subnet: IPv4Network | IPv6Network, index: int, environment: dict
+        self,
+        user: str,
+        container: dict,
+        subnet: IPv4Network | IPv6Network,
+        index: int,
+        environment: dict,
     ) -> None:
         user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
         self.docker.create_container(
             environment=environment,
-            container_name=f"{user_filtered}_{container['name']}" + f"{index}",
+            container_name=f"{user_filtered}_{container['name']}",
             network_name=f"{user_filtered}_network",
             image=container["image"],
             host_address=str(subnet.network_address + index),
@@ -372,58 +347,3 @@ class Host:
             image="ghcr.io/emcl-research-itseclab/itsec-1-exercises:main-kali",
             host_address=str(subnet.network_address + index),
         )
-
-    def _modify_ovpn_client(self, user: str, port: int) -> None:
-        """
-        Changes the IP address and port in the 'remote' line of an OpenVPN configuration file
-        only if the IP address or port is different from the current values.
-
-        Args:
-            user (str): Username associated with the OpenVPN configuration file.
-            port (int): New port number to replace in the 'remote' line.
-
-        Returns:
-            str: The username if the configuration was changed, otherwise None.
-        """
-        if not os.path.exists(f"{self.save_path}/data/{user}/client.ovpn"):
-            print(f"File {f'{self.save_path}/data/{user}/client.ovpn'} does not exist.")
-            return None
-
-        modified_lines = []
-
-        with open(f"{self.save_path}/data/{user}/client.ovpn", "r") as file:
-            lines = file.readlines()
-
-        remote_line_found = False
-        change_needed = False
-
-        for line in lines:
-            if line.startswith("remote "):
-                parts = line.split()
-                if len(parts) == 3:
-                    current_ip = parts[1]
-                    current_port = parts[2]
-
-                    if current_ip != self.ip or current_port != str(port):
-                        parts[1] = str(self.ip)
-                        parts[2] = str(port)
-                        line = " ".join(parts) + "\n"
-                        change_needed = True
-
-                    remote_line_found = True
-
-            modified_lines.append(line)
-
-        if not remote_line_found:
-            raise RemoteLineNotFoundError("No 'remote' line found in the file.")
-
-        if change_needed:
-            with open(f"{self.save_path}/data/{user}/client.ovpn", "w") as file:
-                file.writelines(modified_lines)
-            logger.info(
-                f"IP address and port in the 'remote' line of {f'{self.save_path}/data/{user}/client.ovpn'} have been successfully modified."
-            )
-        else:
-            logger.info(
-                f"No change needed for {user}. The IP address and port are already correct."
-            )

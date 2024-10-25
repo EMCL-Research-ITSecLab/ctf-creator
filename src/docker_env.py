@@ -14,17 +14,13 @@ from src.log_config import get_logger
 logger = get_logger("ctf_creator.docker")
 
 
-class DownloadError(Exception):
-    """Custom exception for download errors."""
-
-    pass
-
-
 class Docker:
     def __init__(self, host: dict) -> None:
         self.username = host.get("username")
         self.ip = ip_address(host.get("ip"))
-        self.client = DockerClient(base_url=f"ssh://{self.username}@{self.ip}", use_ssh_client=True)
+        self.client = DockerClient(
+            base_url=f"ssh://{self.username}@{self.ip}", use_ssh_client=True
+        )
 
     def prune(self):
         try:
@@ -69,7 +65,12 @@ class Docker:
             )
 
     def create_container(
-        self, environment: dict, network_name: str, host_address: str, container_name: str, image: str
+        self,
+        environment: dict,
+        network_name: str,
+        host_address: str,
+        container_name: str,
+        image: str,
     ) -> None:
         """
         Create a Docker container with a specific name, image, and static IP address.
@@ -101,14 +102,12 @@ class Docker:
                 tmpfs={
                     "/var/run": "",
                     "/var/cache": "",
-                    "/var/cache/nginx":"",
-                    "/tmp": ""
+                    "/var/cache/nginx": "",
+                    "/tmp": "",
                 },
                 mem_limit="128m",
                 memswap_limit=0,
-                restart_policy={
-                    "name": "always"
-                },
+                restart_policy={"name": "always"},
                 cpu_quota=1000,
             )
             return container
@@ -117,7 +116,12 @@ class Docker:
             raise
 
     def create_kali(
-        self, command: list, network_name: str, host_address: str, container_name: str, image: str
+        self,
+        command: list,
+        network_name: str,
+        host_address: str,
+        container_name: str,
+        image: str,
     ) -> None:
         """
         Create a Docker container with a specific name, image, and static IP address.
@@ -147,9 +151,7 @@ class Docker:
                 cap_add=["NET_ADMIN", "NET_RAW"],
                 mem_limit="512m",
                 memswap_limit=0,
-                restart_policy={
-                    "name": "always"
-                },
+                restart_policy={"name": "always"},
                 cpu_quota=50000,
             )
             return container
@@ -157,127 +159,12 @@ class Docker:
             logger.error(f"Error creating container: {e}")
             raise
 
-    def _curl_client_ovpn(
-        self,
-        user: str,
-        http_port: str,
-        save_path: str,
-        max_retries_counter=0,
-        max_retries=25,
-    ) -> None:
-        """
-        Downloads a .conf version of the client OpenVPN configuration file from a specified URL with retry logic.
-
-        Args:
-            user (str): Name of the user.
-            http_port (str): Name of the user.
-            save_path (str): Path to the directory where the file will be saved.
-            max_retries_counter (int, optional): Current retry attempt count.
-            max_retries (int, optional): Maximum number of retry attempts.
-        """
-        save_directory = f"{save_path}/data/{user}"
-        url = f"http://{self.ip}:{http_port}/client.ovpn"
-
-        try:
-            os.makedirs(save_directory, exist_ok=True)
-            command = f"curl -o {save_directory}/client.ovpn {url}"
-
-            while max_retries_counter < max_retries:
-                try:
-                    run(command, shell=True, check=True)
-                    logger.info(
-                        f"File downloaded successfully to {save_directory}/client.ovpn"
-                    )
-                    return
-                except CalledProcessError:
-                    max_retries_counter += 1
-                    time.sleep(3)
-                    logger.info(f"Retrying... ({max_retries_counter}/{max_retries})")
-                except Exception as e:
-                    logger.error(f"Unexpected error: {e}")
-                    max_retries_counter += 1
-                    time.sleep(3)
-                    logger.info(f"Retrying... ({max_retries_counter}/{max_retries})")
-
-            logger.info(f"Download failed after {max_retries} retries.")
-            raise DownloadError("Max retries exceeded.")
-
-        except Exception as e:
-            logger.error(f"Error: An unexpected error occurred - {e}")
-            raise DownloadError(f"An unexpected error occurred - {e}")
-                
-
-    def get_openvpn_config(
-        self, user: str, http_port: int, container_name: str, save_path: str
-    ):
-        logger.info(f"Downloading OpenVPN configuration for {user}...")
-
-        # Download the folder with data
-        try:
-            container = self.client.containers.get(container_name)
-        except NotFound:
-            logger.error(f"Error: Container {container_name} not found.")
-            exit(1)
-        except Exception as e:
-            logger.error(f"Error: Something is wrong with {container_name}. {e}")
-            exit(1)
-
-        unhealthy = True
-        max_retries = 0
-        while unhealthy or max_retries == 25:
-            container = self.client.containers.get(container_name)
-            if container.attrs["State"]["Health"]:
-                health_status = container.attrs["State"]["Health"]["Status"]
-                logger.info(f"{container_name}: Health status: {health_status}")
-                if health_status == "healthy":
-                    unhealthy = False
-            else:
-                logger.info(
-                    f"{container_name}: No healthcheck defined for this container"
-                )
-            max_retries += 1
-            time.sleep(5)
-
-        try:
-            logger.info("Executing command in container...")
-            _, _ = container.exec_run("./genclient.sh", detach=True)
-            # Delay to give time to run the command in the container
-            time.sleep(5)
-            self._curl_client_ovpn(
-                user=user, http_port=str(http_port), save_path=save_path
-            )
-        except Exception as e:
-            logger.error(f"Error: Unable to execute command in container. {e}")
-            exit(1)
-
-        try:
-            container = self.client.containers.get(container_name)
-            local_save_path = f"{save_path}/data/{user}"
-            local_path_to_data = f"{save_path}/data/{user}/dockovpn_data.tar"
-            os.makedirs(local_save_path, exist_ok=True)
-            archive, stat = container.get_archive("/opt/Dockovpn_data")
-            # Save the archive to a local file
-            with open(local_path_to_data, "wb") as f:
-                for chunk in archive:
-                    f.write(chunk)
-            logger.info(f"Container found: {container_name}")
-            logger.info("And the Dockovpn_data folder is saved on this system")
-        except NotFound:
-            logger.info(f"Error: Container {container_name} not found.")
-            exit(1)
-        except Exception as e:
-            logger.info(
-                f"Error: Something is wrong with the saving of the ovpn_data!. {e}"
-            )
-            exit(1)
-
     def create_openvpn_server(
         self,
         host_address: str,
         network_name: str,
         container_name: str,
         openvpn_port: int,
-        http_port: int,
         mount_path: str,
     ):
         """
@@ -301,10 +188,11 @@ class Docker:
                 image="alekslitvinenk/openvpn",
                 detach=True,
                 name=container_name,
+                command="-s",
                 network=network_name,
                 restart_policy={"Name": "always"},
                 cap_add=["NET_ADMIN"],
-                ports={"1194/udp": str(openvpn_port), "8080/tcp": str(http_port)},
+                ports={"1194/udp": str(openvpn_port)},
                 healthcheck={
                     "test": ["CMD-SHELL", f"netstat -lun | grep -c 1194"],
                     "interval": 1000000,
@@ -317,7 +205,7 @@ class Docker:
                 volumes=[f"{mount_path}:/opt/Dockovpn_data"],
                 mem_limit="256m",
                 memswap_limit=0,
-                cpu_quota=100000
+                cpu_quota=100000,
             )
 
             return container
