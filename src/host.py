@@ -297,28 +297,6 @@ class Host:
 
         self.docker.modify_ovpn_server(user=user_filtered, subnet=subnet)
 
-    def write_readme(self, user: str):
-        user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
-
-        # TODO If network already exists
-        # network = self.docker.client.networks.get(f"{user_filtered}_network")
-        # logger.debug("Get the IPAM configuration")
-        # ipam_config = network.attrs['IPAM']['Config']
-        # logger.debug("Iterate through the IPAM config to find the subnet")
-        # subnet = ""
-        # for config in ipam_config:
-        #     psubnet = config.get('Subnet')
-        #     if psubnet:
-        #         subnet = psubnet
-        #         logger.info(f"Update subnet information for {user} with {subnet}")
-
-        # logger.info(f"Update README.md of {user} with subnet {subnet}")
-        # self._write_readme(
-        #     path=f"{self.save_path}/data/{user}/",
-        #     user=user,
-        #     subnet=subnet
-        # )
-
     def start_container(
         self,
         user: str,

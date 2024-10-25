@@ -8,7 +8,8 @@ from src.log_config import get_logger
 
 logger = get_logger("ctf_creator.participant")
 
-class Participant():
+
+class Participant:
     def __init__(self, user: str, save_path: str) -> None:
         self.name = user
         self.save_path = save_path
@@ -16,8 +17,10 @@ class Participant():
             self.ip, self.existing_openvpn_port = self._extract_ovpn_info(
                 f"{self.save_path}/data/{self.name}/client.ovpn"
             )
-            self.subnet = self._extract_readme_info(
-                f"{self.save_path}/data/{self.name}/README.md"
+            self.subnet = ip_network(
+                self._extract_readme_info(
+                    f"{self.save_path}/data/{self.name}/README.md"
+                )
             )
 
     def _extract_readme_info(self, file_path):
