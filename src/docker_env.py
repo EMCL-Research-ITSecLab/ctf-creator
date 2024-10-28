@@ -193,19 +193,19 @@ class Docker:
                 restart_policy={"Name": "always"},
                 cap_add=["NET_ADMIN"],
                 ports={"1194/udp": str(openvpn_port)},
-                healthcheck={
-                    "test": ["CMD-SHELL", f"netstat -lun | grep -c 1194"],
-                    "interval": 1000000,
-                    "retries": 5,
-                },
                 environment={
                     "HOST_ADDR": f"{str(self.ip)}",
+                },
+                tmpfs={
+                    "/var/run": "",
+                    "/var/cache": "",
+                    "/tmp": "",
                 },
                 networking_config={network_name: endpoint_config},
                 volumes=[f"{mount_path}:/opt/Dockovpn_data"],
                 mem_limit="256m",
                 memswap_limit=0,
-                cpu_quota=100000,
+                cpu_quota=1000,
             )
 
             return container
