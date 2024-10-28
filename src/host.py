@@ -35,6 +35,7 @@ class Host:
         self.save_path = save_path
         output, _ = self._execute_ssh_command(command="docker ps --format '{{.Names}}'")
         self.containers = output.replace("\r", "").split("\n")
+        logger.info(f"Running containers: {self.containers}")
 
     def _check_reachability(self):
         """

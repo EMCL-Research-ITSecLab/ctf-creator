@@ -315,8 +315,8 @@ class CTFCreator:
                 running = False
         if not host.container_exists(user=user, container="openvpn"):
             running = False
-        # if not host.container_exists(user=user, container="kali"):
-        #     running = False
+        if not host.container_exists(user=user, container="kali"):
+            running = False
 
         if running:
             logger.info(f"All are up and running for {user}")
@@ -343,7 +343,7 @@ class CTFCreator:
         used_ports = []
         used_subnets = []
         users = []
-        logger.info("\u2500" * 50)
+        logger.info("\u2500" * 120)
         for idx, mail in enumerate(self.config.get("users")):
             user_obj = Participant(user=mail, save_path=self.save_path)
 
@@ -359,9 +359,9 @@ class CTFCreator:
 
         logger.info(f"Ports in use {used_ports}")
         logger.info(f"Subnets in use {used_subnets}")
-        logger.info("\u2500" * 50)
+        logger.info("\u2500" * 120)
         for idx, user in enumerate(users):
-            logger.info("\u2500" * 50)
+            logger.info("\u2500" * 120)
             if not os.path.exists(f"{self.save_path}/data/{user.name}"):
                 logger.info(
                     f"For the user: {user}, an OpenVPN configuration file will be generated!"
@@ -411,8 +411,8 @@ class CTFCreator:
                     subnet=user.subnet,
                 )
                 self._start_containers(host=host, subnet=user.subnet, user=user.name)
-                # self._start_kalibox(user=user, host=host, subnet=next_network)
-        logger.info("\u2500" * 50)
+                self._start_kalibox(user=user.name, host=host, subnet=user.subnet)
+        logger.info("\u2500" * 120)
 
     def _start_containers(
         self, user: str, host: Host, subnet: IPv4Network | IPv6Network
