@@ -24,6 +24,7 @@ from src.host import Host
 from src.log_config import get_logger
 from src.utils import Path
 from src.participant import Participant
+from src.gen_flag import gen_flag
 
 
 logger = get_logger("ctf_creator.ctf")
@@ -42,14 +43,21 @@ class RemoteLineNotFoundError(Exception):
 
 
 class CTFCreator:
-    def __init__(self, config: str, save_path: str, prune: bool) -> None:
+    def __init__(self, config: str, save_path: str, prune: bool, kalibox: bool, recreate: bool) -> None:
         self.config = self._get_config(config)
         self.prune = prune
+        self.kalibox = kalibox
+        self.recreate = recreate
         logger.info(f"Containers: {self.config.get('containers')}")
         logger.info(f"Users: {self.config.get('users')}")
         logger.info(f"Key: {self.config.get('key')}")
         logger.info(f"Hosts: {self.config.get('hosts')}")
-        logger.info(f"IP-Address Subnet-base: {self.config.get('subnet')} ")
+        logger.info(f"IP-Address Subnet-base: {self.config.get('subnet')}")
+
+        self.total_amount = len(self.config.get("containers")) + 1
+        if self.kalibox:
+            self.total_amount = self.total_amount + 1
+        logger.info(f"Total number of containers per user {self.total_amount}")
 
         self.save_path = save_path
         self.subnet = ip_network(self.config.get("subnet"))
@@ -308,28 +316,35 @@ class CTFCreator:
     def _check_running(self, user: str, host: Host):
         logger.info("Check if containers and OpenVPN exists...")
 
-        running = True
-        for test_container in self.config.get("containers"):
-            container_name = test_container["name"]
-            if not host.container_exists(user=user, container=container_name):
-                running = False
-        if not host.container_exists(user=user, container="openvpn"):
-            running = False
-        if not host.container_exists(user=user, container="kali"):
-            running = False
+        running = []
 
-        if running:
+        if host.container_exists(user=user, container="openvpn"):
+            running.append("openvpn")
+
+        if self.kalibox and host.container_exists(user=user, container="kali"):
+            running.append("kali")
+
+        if len(running) == self.total_amount:
             logger.info(f"All are up and running for {user}")
-        if not running:
+        else:
             logger.info(f"Remove containers, not all are up and running for {user}")
-            host.container_remove(user=user, container="openvpn")
-            host.container_remove(user=user, container="kali")
-            for test_container in self.config.get("containers"):
-                container_name = test_container["name"]
-                host.container_remove(user=user, container=container_name)
-            host.network_remove(user=user)
 
-        return running
+            if self.recreate:
+                logger.debug("Remove OpenVPN container to recreate.")
+                host.container_remove(user=user, container="openvpn")
+                running.remove("openvpn")
+
+            if self.kalibox and self.recreate:
+                logger.debug("Remove Kalibox container to recreate.")
+                host.container_remove(user=user, container="kali")
+                running.remove("kali")
+
+            host.challenge_remove(user=user)
+            
+            if self.recreate:
+                host.network_remove(user=user)
+
+            return running
 
     def create_challenge(self):
         logger.info("Set up hosts.")
@@ -352,7 +367,7 @@ class CTFCreator:
                 logger.info(
                     f"Data for the user: {user_obj.name} will NOT be changed. Starting OVPN Docker container with existing data."
                 )
-                used_ports.append(int(user_obj.existing_openvpn_port - openvpn_port))
+                used_ports.append(int(user_obj.existing_openvpn_port))
                 used_subnets.append(str(user_obj.subnet))
 
             users.append(user_obj)
@@ -364,18 +379,19 @@ class CTFCreator:
             logger.info("\u2500" * 120)
             if not os.path.exists(f"{self.save_path}/data/{user.name}"):
                 logger.info(
-                    f"For the user: {user}, an OpenVPN configuration file will be generated!"
+                    f"For the user: {user.name}, an OpenVPN configuration file will be generated!"
                 )
                 host: Host = self.hosts[idx % len(self.hosts)]
                 user.ip = host.ip
                 # Get free port
                 in_use = True
                 while in_use:
-                    if not challenge_counter in used_ports:
+                    if not (openvpn_port + challenge_counter) in used_ports:
                         in_use = False
                     else:
                         challenge_counter += 1
                 user.existing_openvpn_port = openvpn_port + challenge_counter
+                used_ports.append(openvpn_port + challenge_counter)
                 # Get free subnet
                 in_use = True
                 while in_use:
@@ -390,7 +406,8 @@ class CTFCreator:
                             strict=False,
                         )
                         next_network = next_network.supernet(new_prefix=24)
-                user.subnet = str(next_network)
+                user.subnet = next_network
+                used_subnets.append(str(next_network))
 
                 logger.info(f"Deploy on host: {host.ip}")
 
@@ -403,15 +420,22 @@ class CTFCreator:
             host: Host = [d for d in self.hosts if str(d.ip) == str(user.ip)][0]
             logger.info(f"Deploy on host: {host.ip}")
 
-            if not self._check_running(user=user.name, host=host):
+            running = self._check_running(user=user.name, host=host)
+
+            if not "openvpn" in running:
                 host.send_and_extract_tar(user=user.name)
+                # TODO fix problem, that OpenVPN creates the network
                 host.start_openvpn(
                     user=user.name,
                     openvpn_port=user.existing_openvpn_port,
                     subnet=user.subnet,
                 )
-                self._start_containers(host=host, subnet=user.subnet, user=user.name)
+
+            self._start_containers(host=host, subnet=user.subnet, user=user.name)
+
+            if self.kalibox and not "kali" in running:
                 self._start_kalibox(user=user.name, host=host, subnet=user.subnet)
+
         logger.info("\u2500" * 120)
 
     def _start_containers(
@@ -431,7 +455,7 @@ class CTFCreator:
                 container=container,
                 subnet=subnet,
                 index=random_ip,
-                environment={"USER": user, "SECRET": self.config.get("secret")},
+                environment={"USER": user, "SECRET": self.config.get("secret"), "FLAG": gen_flag(secret=self.config.get("secret"), user=f"{user}_{container['name']}")},
             )
 
     def _start_kalibox(self, user: str, host: Host, subnet: IPv4Network | IPv6Network):
@@ -464,8 +488,22 @@ class CTFCreator:
     help="Prunes all running containers on the host machine.",
     show_default=True,
 )
-def main(config, save, prune):
-    ctfcreator = CTFCreator(config=config.read(), save_path=save, prune=prune)
+@click.option(
+    "--kali",
+    default=False,
+    is_flag=True,
+    help="Provides a Kali Docker container for network tracing.",
+    show_default=True,
+)
+@click.option(
+    "--recreate",
+    default=False,
+    is_flag=True,
+    help="Provides a Kali Docker container for network tracing.",
+    show_default=True,
+)
+def main(config, save, prune, kali, recreate):
+    ctfcreator = CTFCreator(config=config.read(), save_path=save, prune=prune, kalibox=kali, recreate=recreate)
     ctfcreator.create_challenge()
 
 

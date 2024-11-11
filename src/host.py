@@ -33,7 +33,7 @@ class Host:
 
         self.docker = Docker(host=host)
         self.save_path = save_path
-        output, _ = self._execute_ssh_command(command="docker ps --format '{{.Names}}'")
+        output, _ = self._execute_ssh_command(command="docker ps -a --format '{{.Names}}'")
         self.containers = output.replace("\r", "").split("\n")
         logger.info(f"Running containers: {self.containers}")
 
@@ -255,14 +255,26 @@ class Host:
     def container_remove(self, user, container):
         user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
         try:
-            for con in self.containers:
-                if f"{user_filtered}_{container}" in con:
-                    pcontainer = self.docker.client.containers.get(con)
+            pcontainer = self.docker.client.containers.get(f"{user_filtered}_{container}")
+            pcontainer.stop()
+            pcontainer.remove()
+        except APIError as e:
+            logger.warning(
+                f"Container {user_filtered}_{container} not found on host {self.ip}."
+            )
+            logger.warning(f"Error {e}.")
+
+    def challenge_remove(self, user):
+        user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
+        try:
+            for test_container in self.containers:
+                if f"{user_filtered}_main-" in test_container:
+                    pcontainer = self.docker.client.containers.get(test_container)
                     pcontainer.stop()
                     pcontainer.remove()
         except APIError as e:
             logger.warning(
-                f"Container {user_filtered}_{container} not found on host {self.ip}."
+                f"Container {user_filtered} not found on host {self.ip}."
             )
             logger.warning(f"Error {e}.")
 
