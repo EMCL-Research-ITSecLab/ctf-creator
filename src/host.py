@@ -256,15 +256,14 @@ class Host:
         user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
         try:
             pcontainer = self.docker.client.containers.get(f"{user_filtered}_{container}")
-            pcontainer.stop()
-            pcontainer.remove()
+            pcontainer.remove(force=True)
         except APIError as e:
             logger.warning(
                 f"Container {user_filtered}_{container} not found on host {self.ip}."
             )
             logger.warning(f"Error {e}.")
 
-    def challenge_remove(self, user):
+    def challenge_remove(self, user: str):
         user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
         try:
             for test_container in self.containers:

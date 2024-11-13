@@ -253,7 +253,7 @@ class Docker:
         try:
             # Attempt to inspect the image locally
             self.client.images.get(f"{image_name}")
-            logger.info(f"Image {image_name} exists locally.")
+            logger.debug(f"Image {image_name} exists locally.")
             return True
         except ImageNotFound:
             # If the image is not local, try to pull it

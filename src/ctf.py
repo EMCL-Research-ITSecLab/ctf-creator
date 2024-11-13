@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 import os
 import random
 import sys
@@ -48,6 +49,9 @@ class CTFCreator:
         self.prune = prune
         self.kalibox = kalibox
         self.recreate = recreate
+        self.openvpn_port = 45000
+        self.challenge_counter = 1
+        
         logger.info(f"Containers: {self.config.get('containers')}")
         logger.info(f"Users: {self.config.get('users')}")
         logger.info(f"Key: {self.config.get('key')}")
@@ -61,6 +65,7 @@ class CTFCreator:
 
         self.save_path = save_path
         self.subnet = ip_network(self.config.get("subnet"))
+        self.next_network = self.subnet
 
         self.local_docker = DockerClient(base_url="unix:///var/run/docker.sock")
         self.local_docker_ip = "0.0.0.0"
@@ -351,10 +356,6 @@ class CTFCreator:
         self.hosts = self._get_hosts()
         logger.info("Begin set up of challenge.")
 
-        openvpn_port = 45000
-        challenge_counter = 1
-        next_network = self.subnet
-
         used_ports = []
         used_subnets = []
         users = []
@@ -364,7 +365,7 @@ class CTFCreator:
 
             if os.path.exists(f"{user_obj.save_path}/data/{user_obj.name}"):
                 logger.info(f"OpenVPN data exists for the user: {user_obj.name}")
-                logger.info(
+                logger.debug(
                     f"Data for the user: {user_obj.name} will NOT be changed. Starting OVPN Docker container with existing data."
                 )
                 used_ports.append(int(user_obj.existing_openvpn_port))
@@ -375,68 +376,79 @@ class CTFCreator:
         logger.info(f"Ports in use {used_ports}")
         logger.info(f"Subnets in use {used_subnets}")
         logger.info("\u2500" * 120)
+
         for idx, user in enumerate(users):
-            logger.info("\u2500" * 120)
             if not os.path.exists(f"{self.save_path}/data/{user.name}"):
-                logger.info(
-                    f"For the user: {user.name}, an OpenVPN configuration file will be generated!"
-                )
-                host: Host = self.hosts[idx % len(self.hosts)]
-                user.ip = host.ip
-                # Get free port
-                in_use = True
-                while in_use:
-                    if not (openvpn_port + challenge_counter) in used_ports:
-                        in_use = False
-                    else:
-                        challenge_counter += 1
-                user.existing_openvpn_port = openvpn_port + challenge_counter
-                used_ports.append(openvpn_port + challenge_counter)
-                # Get free subnet
-                in_use = True
-                while in_use:
-                    if not str(next_network) in used_subnets:
-                        in_use = False
-                    else:
-                        next_network = ip_network(
-                            (
-                                int(next_network.network_address)
-                                + next_network.num_addresses
-                            ),
-                            strict=False,
-                        )
-                        next_network = next_network.supernet(new_prefix=24)
-                user.subnet = next_network
-                used_subnets.append(str(next_network))
-
-                logger.info(f"Deploy on host: {host.ip}")
-
-                self._start_local_openvpn()
-                self._openvpn_config(user=user)
-                self._modify_ovpn_client(user=user)
-                self._stop_local_openvpn()
-                user.write_readme()
+                self._create_openvpn_data(idx, user, used_ports, used_subnets)
 
             host: Host = [d for d in self.hosts if str(d.ip) == str(user.ip)][0]
-            logger.info(f"Deploy on host: {host.ip}")
+            logger.debug(f"Deploy on host: {host.ip}")
 
-            running = self._check_running(user=user.name, host=host)
-
-            if not "openvpn" in running:
-                host.send_and_extract_tar(user=user.name)
-                # TODO fix problem, that OpenVPN creates the network
-                host.start_openvpn(
-                    user=user.name,
-                    openvpn_port=user.existing_openvpn_port,
-                    subnet=user.subnet,
-                )
-
-            self._start_containers(host=host, subnet=user.subnet, user=user.name)
-
-            if self.kalibox and not "kali" in running:
-                self._start_kalibox(user=user.name, host=host, subnet=user.subnet)
+            pool = ThreadPoolExecutor(max_workers=len(self.hosts))
+            pool.submit(self.deploy_challenge, user, host)
+    
+    def deploy_challenge(self, user: Participant, host: Host):
 
         logger.info("\u2500" * 120)
+        logger.info(f"Create Challenge for {user.name}")
+
+        running = self._check_running(user=user.name, host=host)
+
+        if not "openvpn" in running:
+            host.send_and_extract_tar(user=user.name)
+            # TODO fix problem, that OpenVPN creates the network
+            host.start_openvpn(
+                user=user.name,
+                openvpn_port=user.existing_openvpn_port,
+                subnet=user.subnet,
+            )
+
+        self._start_containers(host=host, subnet=user.subnet, user=user.name)
+
+        if self.kalibox and not "kali" in running:
+            self._start_kalibox(user=user.name, host=host, subnet=user.subnet)
+
+        logger.info("\u2500" * 120)
+    
+    def _create_openvpn_data(self, idx:int, user: Participant, used_ports: list, used_subnets: list):
+        logger.info(
+            f"For the user: {user.name}, an OpenVPN configuration file will be generated!"
+        )
+        host: Host = self.hosts[idx % len(self.hosts)]
+        user.ip = host.ip
+        # Get free port
+        in_use = True
+        while in_use:
+            if not (self.openvpn_port + self.challenge_counter) in used_ports:
+                in_use = False
+            else:
+                self.challenge_counter += 1
+        user.existing_openvpn_port = self.openvpn_port + self.challenge_counter
+        used_ports.append(self.openvpn_port + self.challenge_counter)
+        # Get free subnet
+        in_use = True
+        while in_use:
+            if not str(self.next_network) in used_subnets:
+                in_use = False
+            else:
+                self.next_network = ip_network(
+                    (
+                        int(self.next_network.network_address)
+                        + self.next_network.num_addresses
+                    ),
+                    strict=False,
+                )
+                self.next_network = self.next_network.supernet(new_prefix=24)
+        user.subnet = self.next_network
+        used_subnets.append(str(self.next_network))
+
+        logger.debug(f"Deploy on host: {host.ip}")
+
+        self._start_local_openvpn()
+        self._openvpn_config(user=user)
+        self._modify_ovpn_client(user=user)
+        self._stop_local_openvpn()
+        user.write_readme()
 
     def _start_containers(
         self, user: str, host: Host, subnet: IPv4Network | IPv6Network
@@ -449,7 +461,7 @@ class CTFCreator:
                 if not random_ip in used_ip:
                     used_ip.append(random_ip)
                     used = False
-            logger.info(f"Randomized port {random_ip}")
+            logger.debug(f"Randomized port {random_ip}")
             host.start_container(
                 user=user,
                 container=container,
