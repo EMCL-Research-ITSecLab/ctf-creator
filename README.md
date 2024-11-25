@@ -3,7 +3,6 @@
 <!-- PROJECT SHIELDS -->
 <div align="center">
 
-[![Codecov Coverage][coverage-shield]][coverage-url]
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
@@ -47,6 +46,7 @@ Options:
                      Creator.  [required]
   --save PATH        The path where you want to save the user data for the
                      CTF-Creator. E.g. /home/debian/ctf-creator  [required]
+  --prune            Prunes all running containers on the host machine.
   --help             Show this message and exit.
 ```
 
@@ -99,26 +99,6 @@ To run all tests at once you can run this command in the terminal in the main fo
 ```sh
 python3 -m pytest -v
 ```
-
-## Features
-
-#### Main Function Overview
-
-The main function of the CTF-Creator tool, located in `src/ctf.py`, serves as the core component responsible for setting up the entire CTF environment.
-It reads configurations from a YAML file, connects to specified hosts via SSH, and deploys Docker containers and networks uniformly across all hosts according to the provided specifications, utilizing various helper functions and external libraries such as Docker SDK, PyYAML, and Click.
-
-Key Functionalities:
-
-1. YAML Configuration Parsing
-2. SSH Connection Initialization
-3. Host Reachability and SSH Connectivity Check
-4. Cleanup of Existing Docker Containers and Networks
-5. OpenVPN Server Setup
-6. OpenVPN Configuration Management
-7. Docker Container Deployment
-8. Documentation and Output Generation
-9. Error Handling and Logging
-
 ## Credits
 
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
