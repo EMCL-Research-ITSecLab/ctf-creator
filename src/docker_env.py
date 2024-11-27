@@ -105,11 +105,10 @@ class Docker:
                     "/var/cache/nginx": "",
                     "/tmp": "",
                 },
-                auto_remove=True,
                 mem_limit="128m",
                 memswap_limit=0,
                 restart_policy={"name": "always"},
-                cpu_quota=1000,
+                cpu_quota=500000,
             )
             return container
         except APIError as e:

@@ -318,6 +318,7 @@ class Host:
         environment: dict,
     ) -> None:
         user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
+        environment["USER_FILTERED"] = user_filtered
         self.docker.create_container(
             environment=environment,
             container_name=f"{user_filtered}_{container['name']}",
