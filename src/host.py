@@ -270,7 +270,7 @@ class Host:
                 if f"{user_filtered}_main-" in test_container:
                     pcontainer = self.docker.client.containers.get(test_container)
                     pcontainer.stop()
-                    pcontainer.remove()
+                    pcontainer.remove(force=True)
         except APIError as e:
             logger.warning(
                 f"Container {user_filtered} not found on host {self.ip}."
