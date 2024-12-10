@@ -1,4 +1,3 @@
-from concurrent.futures import ThreadPoolExecutor
 import os
 import random
 import sys
@@ -376,7 +375,8 @@ class CTFCreator:
         logger.info(f"Ports in use {used_ports}")
         logger.info(f"Subnets in use {used_subnets}")
         logger.info("\u2500" * 120)
-
+        
+        futures = []
         for idx, user in enumerate(users):
             if not os.path.exists(f"{self.save_path}/data/{user.name}"):
                 self._create_openvpn_data(idx, user, used_ports, used_subnets)
@@ -384,10 +384,9 @@ class CTFCreator:
             host: Host = [d for d in self.hosts if str(d.ip) == str(user.ip)][0]
             logger.debug(f"Deploy on host: {host.ip}")
 
-            pool = ThreadPoolExecutor(max_workers=len(self.hosts))
-            pool.submit(self.deploy_challenge, user, host)
+            self.deploy_challenge(user, host)
     
-    def deploy_challenge(self, user: Participant, host: Host):
+    def deploy_challenge(self, user: Participant, host: Host) -> str:
 
         logger.info("\u2500" * 120)
         logger.info(f"Create Challenge for {user.name}")
@@ -409,6 +408,8 @@ class CTFCreator:
             self._start_kalibox(user=user.name, host=host, subnet=user.subnet)
 
         logger.info("\u2500" * 120)
+
+        return f"Done for User: {user.name}"
     
     def _create_openvpn_data(self, idx:int, user: Participant, used_ports: list, used_subnets: list):
         logger.info(
