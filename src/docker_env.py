@@ -276,6 +276,15 @@ class Docker:
             f"sed -i '$ a\\push \"route {subnet.network_address} 255.255.255.0\"' >> /etc/openvpn/server.conf",
             "sed -i '$ a\\route-nopull' >> /etc/openvpn/server.conf",
             "sed -i '$ a\\pull-filter ignore redirect-gateway' >> /etc/openvpn/server.conf",
+            f"iptables -A INPUT -s {subnet.network_address}/24 -j ACCEPT",
+            f"iptables -A OUTPUT -d {subnet.network_address}/24 -j ACCEPT",
+            # Allow established connections (to avoid breaking existing sessions)
+            "iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT",
+            "iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT",
+            # Drop all other incoming traffic (except from {subnet.network_address}/16)
+            "iptables -A INPUT -j DROP",
+            # Drop all other outgoing traffic (except to {subnet.network_address}/16)
+            "iptables -A OUTPUT -j DROP"
         ]
         for sed_cmd in delete_old:
             container.exec_run(cmd=sed_cmd)
