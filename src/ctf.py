@@ -336,12 +336,14 @@ class CTFCreator:
             if self.recreate:
                 logger.debug("Remove OpenVPN container to recreate.")
                 host.container_remove(user=user, container="openvpn")
-                running.remove("openvpn")
+                if "openvpn" in running:
+                    running.remove("openvpn")
 
             if self.kalibox and self.recreate:
                 logger.debug("Remove Kalibox container to recreate.")
                 host.container_remove(user=user, container="kali")
-                running.remove("kali")
+                if "kali" in running:
+                    running.remove("kali")
 
             host.challenge_remove(user=user)
             

@@ -278,13 +278,15 @@ class Docker:
             "sed -i '$ a\\pull-filter ignore redirect-gateway' >> /etc/openvpn/server.conf",
             f"iptables -A INPUT -s {subnet.network_address}/24 -j ACCEPT",
             f"iptables -A OUTPUT -d {subnet.network_address}/24 -j ACCEPT",
-            # Allow established connections (to avoid breaking existing sessions)
-            "iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT",
-            "iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT",
-            # Drop all other incoming traffic (except from {subnet.network_address}/16)
-            "iptables -A INPUT -j DROP",
-            # Drop all other outgoing traffic (except to {subnet.network_address}/16)
-            "iptables -A OUTPUT -j DROP"
+            f"""
+            sed -i '/iptables -t nat -A POSTROUTING -s 10.8.0.0\\/24 -o $ADAPTER -j MASQUERADE/a \\
+            iptables -A INPUT -s {subnet.network_address}/24 -j ACCEPT\\n\\
+            iptables -A OUTPUT -d {subnet.network_address}/24 -j ACCEPT\\n\\
+            iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT\\n\\
+            iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT\\n\\
+            iptables -A INPUT -j DROP\\n\\
+            iptables -A OUTPUT -j DROP' /opt/Dockovpn/start.sh
+            """
         ]
         for sed_cmd in delete_old:
             container.exec_run(cmd=sed_cmd)

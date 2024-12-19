@@ -310,9 +310,12 @@ class Host:
         self.docker.modify_ovpn_server(user=user_filtered, subnet=subnet)
         commands = [
             f"sudo iptables -C DOCKER-USER -s {str(subnet.network_address + 2)} -p udp --dport {openvpn_port} -j ACCEPT || sudo iptables --insert DOCKER-USER -s {str(subnet.network_address + 2)} -p udp --dport {openvpn_port} -j ACCEPT",
-            f"sudo iptables -C DOCKER-USER -s {str(subnet.network_address)}/24 -j REJECT --reject-with icmp-port-unreachable || sudo iptables --insert DOCKER-USER -s {str(subnet.network_address)}/24 -j REJECT --reject-with icmp-port-unreachable",
+            # f"sudo iptables -C DOCKER-USER -s {str(subnet.network_address)}/24 -j REJECT --reject-with icmp-port-unreachable || sudo iptables --insert DOCKER-USER -s {str(subnet.network_address)}/24 -j REJECT --reject-with icmp-port-unreachable",
             f"sudo iptables -C DOCKER-USER -s {str(subnet.network_address)}/24 -m state --state RELATED,ESTABLISHED -j RETURN || sudo iptables --insert DOCKER-USER -s {str(subnet.network_address)}/24 -m state --state RELATED,ESTABLISHED -j RETURN",
-            "sudo iptables-save > /etc/iptables/rules.v4"
+            f"sudo iptables -C INPUT -d {str(subnet.network_address + 1)} -j REJECT || sudo iptables -I INPUT -d {str(subnet.network_address + 1)} -j REJECT",
+            f"sudo iptables -C FORWARD -d {str(subnet.network_address + 1)} -j REJECT || sudo iptables -I FORWARD -d {str(subnet.network_address + 1)} -j REJECT",
+            f"sudo iptables -C INPUT -d 10.14.0.0/16 -j REJECT || sudo iptables -I INPUT -d 10.14.0.0/16 -j REJECT",
+            "sudo sh -c 'iptables-save > /etc/iptables/rules.v4'"
         ]
         for command in commands:
             self._execute_ssh_command(command)
