@@ -105,7 +105,7 @@ class Docker:
                     "/var/cache/nginx": "",
                     "/tmp": "",
                 },
-                mem_limit="128m",
+                mem_limit="256m",
                 memswap_limit=0,
                 restart_policy={"name": "always"},
                 cpu_quota=500000,
