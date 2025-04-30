@@ -36,6 +36,8 @@ class Host:
         output, _ = self._execute_ssh_command(command="docker ps -a --format '{{.Names}}'")
         self.containers = output.replace("\r", "").split("\n")
         logger.info(f"Running containers: {self.containers}")
+        output, _ = self._execute_ssh_command(command="docker network ls --format '{{.Name}}'")
+        self.networks = output.replace("\r", "").split("\n")
 
     def _check_reachability(self):
         """
@@ -252,6 +254,15 @@ class Host:
         )
         return False
 
+    def network_exists(self, user):
+        user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
+        if f"{user_filtered}_network" in self.networks:
+            return True
+        logger.warning(
+            f"Container not found {user_filtered}_network on host {self.ip}"
+        )
+        return False
+
     def container_remove(self, user, container):
         user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
         try:
@@ -285,6 +296,14 @@ class Host:
         except APIError as e:
             logger.warning(f"Network {user_filtered}_network not found.")
             logger.warning(f"Error {e}.")
+    
+    def create_network(self, user: str, subnet: IPv4Network | IPv6Network,):
+        user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
+        self.docker.create_network(
+            name=f"{user_filtered}_network",
+            subnet_=str(subnet),
+            gateway_=str(subnet.network_address + 1),
+        )
 
     def start_openvpn(
         self,
@@ -293,12 +312,6 @@ class Host:
         subnet: IPv4Network | IPv6Network,
     ):
         user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
-        self.docker.create_network(
-            name=f"{user_filtered}_network",
-            subnet_=str(subnet),
-            gateway_=str(subnet.network_address + 1),
-        )
-
         self.docker.create_openvpn_server(
             host_address=str(subnet.network_address + 2),
             network_name=f"{user_filtered}_network",

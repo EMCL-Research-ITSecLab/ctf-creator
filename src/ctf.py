@@ -327,9 +327,14 @@ class CTFCreator:
 
         if self.kalibox and host.container_exists(user=user, container="kali"):
             running.append("kali")
+        
+        for container in self.config.get("containers"):
+            if host.container_exists(user=user, container=container["name"]):
+                running.append(container["name"])
 
         if len(running) == self.total_amount:
             logger.info(f"All are up and running for {user}")
+            return running
         else:
             logger.info(f"Remove containers, not all are up and running for {user}")
 
@@ -394,17 +399,35 @@ class CTFCreator:
         logger.info(f"Create Challenge for {user.name}")
 
         running = self._check_running(user=user.name, host=host)
+        
+        if not host.network_exists(user=user.name):
+            host.create_network(user=user.name, subnet=user.subnet)
 
         if not "openvpn" in running:
             host.send_and_extract_tar(user=user.name)
-            # TODO fix problem, that OpenVPN creates the network
             host.start_openvpn(
                 user=user.name,
                 openvpn_port=user.existing_openvpn_port,
                 subnet=user.subnet,
             )
 
-        self._start_containers(host=host, subnet=user.subnet, user=user.name)
+        used_ip = []
+        for container in self.config.get("containers"):
+            if not container["name"] in running:
+                used = True
+                while used:
+                    random_ip = random.randint(4, 254)
+                    if not random_ip in used_ip:
+                        used_ip.append(random_ip)
+                        used = False
+                logger.debug(f"Randomized port {random_ip}")
+                host.start_container(
+                    user=user.name,
+                    container=container,
+                    subnet=user.subnet,
+                    index=random_ip,
+                    environment={"USER": user, "SECRET": self.config.get("secret"), "FLAG": gen_flag(secret=self.config.get("secret"), user=f"{user}_{container['name']}")},
+                )
 
         if self.kalibox and not "kali" in running:
             self._start_kalibox(user=user.name, host=host, subnet=user.subnet)
@@ -452,26 +475,6 @@ class CTFCreator:
         self._modify_ovpn_client(user=user)
         self._stop_local_openvpn()
         user.write_readme()
-
-    def _start_containers(
-        self, user: str, host: Host, subnet: IPv4Network | IPv6Network
-    ):
-        used_ip = []
-        for container in self.config.get("containers"):
-            used = True
-            while used:
-                random_ip = random.randint(4, 254)
-                if not random_ip in used_ip:
-                    used_ip.append(random_ip)
-                    used = False
-            logger.debug(f"Randomized port {random_ip}")
-            host.start_container(
-                user=user,
-                container=container,
-                subnet=subnet,
-                index=random_ip,
-                environment={"USER": user, "SECRET": self.config.get("secret"), "FLAG": gen_flag(secret=self.config.get("secret"), user=f"{user}_{container['name']}")},
-            )
 
     def _start_kalibox(self, user: str, host: Host, subnet: IPv4Network | IPv6Network):
         logger.info(f"Start kalibox on {str(subnet.network_address + 3)}")
