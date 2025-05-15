@@ -286,7 +286,7 @@ class Docker:
             iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT\\n\\
             iptables -A INPUT -j DROP\\n\\
             iptables -A OUTPUT -j DROP' /opt/Dockovpn/start.sh
-            """
+            """,
         ]
         for sed_cmd in delete_old:
             container.exec_run(cmd=sed_cmd)

@@ -33,10 +33,14 @@ class Host:
 
         self.docker = Docker(host=host)
         self.save_path = save_path
-        output, _ = self._execute_ssh_command(command="docker ps -a --format '{{.Names}}'")
+        output, _ = self._execute_ssh_command(
+            command="docker ps -a --format '{{.Names}}'"
+        )
         self.containers = output.replace("\r", "").split("\n")
         logger.info(f"Running containers: {self.containers}")
-        output, _ = self._execute_ssh_command(command="docker network ls --format '{{.Name}}'")
+        output, _ = self._execute_ssh_command(
+            command="docker network ls --format '{{.Name}}'"
+        )
         self.networks = output.replace("\r", "").split("\n")
 
     def _check_reachability(self):
@@ -258,15 +262,15 @@ class Host:
         user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
         if f"{user_filtered}_network" in self.networks:
             return True
-        logger.warning(
-            f"Container not found {user_filtered}_network on host {self.ip}"
-        )
+        logger.warning(f"Container not found {user_filtered}_network on host {self.ip}")
         return False
 
     def container_remove(self, user, container):
         user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
         try:
-            pcontainer = self.docker.client.containers.get(f"{user_filtered}_{container}")
+            pcontainer = self.docker.client.containers.get(
+                f"{user_filtered}_{container}"
+            )
             pcontainer.remove(force=True)
         except APIError as e:
             logger.warning(
@@ -283,9 +287,7 @@ class Host:
                     pcontainer.stop()
                     pcontainer.remove(force=True)
         except APIError as e:
-            logger.warning(
-                f"Container {user_filtered} not found on host {self.ip}."
-            )
+            logger.warning(f"Container {user_filtered} not found on host {self.ip}.")
             logger.warning(f"Error {e}.")
 
     def network_remove(self, user):
@@ -296,8 +298,12 @@ class Host:
         except APIError as e:
             logger.warning(f"Network {user_filtered}_network not found.")
             logger.warning(f"Error {e}.")
-    
-    def create_network(self, user: str, subnet: IPv4Network | IPv6Network,):
+
+    def create_network(
+        self,
+        user: str,
+        subnet: IPv4Network | IPv6Network,
+    ):
         user_filtered = re.sub("[^A-Za-z0-9]+", "", user)
         self.docker.create_network(
             name=f"{user_filtered}_network",
@@ -328,7 +334,7 @@ class Host:
             f"sudo iptables -C INPUT -d {str(subnet.network_address + 1)} -j REJECT || sudo iptables -I INPUT -d {str(subnet.network_address + 1)} -j REJECT",
             f"sudo iptables -C FORWARD -d {str(subnet.network_address + 1)} -j REJECT || sudo iptables -I FORWARD -d {str(subnet.network_address + 1)} -j REJECT",
             f"sudo iptables -C INPUT -d 10.14.0.0/16 -j REJECT || sudo iptables -I INPUT -d 10.14.0.0/16 -j REJECT",
-            "sudo sh -c 'iptables-save > /etc/iptables/rules.v4'"
+            "sudo sh -c 'iptables-save > /etc/iptables/rules.v4'",
         ]
         for command in commands:
             self._execute_ssh_command(command)

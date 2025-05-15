@@ -43,14 +43,16 @@ class RemoteLineNotFoundError(Exception):
 
 
 class CTFCreator:
-    def __init__(self, config: str, save_path: str, prune: bool, kalibox: bool, recreate: bool) -> None:
+    def __init__(
+        self, config: str, save_path: str, prune: bool, kalibox: bool, recreate: bool
+    ) -> None:
         self.config = self._get_config(config)
         self.prune = prune
         self.kalibox = kalibox
         self.recreate = recreate
         self.openvpn_port = 45000
         self.challenge_counter = 1
-        
+
         logger.info(f"Containers: {self.config.get('containers')}")
         logger.info(f"Users: {self.config.get('users')}")
         logger.info(f"Key: {self.config.get('key')}")
@@ -327,7 +329,7 @@ class CTFCreator:
 
         if self.kalibox and host.container_exists(user=user, container="kali"):
             running.append("kali")
-        
+
         for container in self.config.get("containers"):
             if host.container_exists(user=user, container=container["name"]):
                 running.append(container["name"])
@@ -351,7 +353,7 @@ class CTFCreator:
                     running.remove("kali")
 
             host.challenge_remove(user=user)
-            
+
             if self.recreate:
                 host.network_remove(user=user)
 
@@ -382,7 +384,7 @@ class CTFCreator:
         logger.info(f"Ports in use {used_ports}")
         logger.info(f"Subnets in use {used_subnets}")
         logger.info("\u2500" * 120)
-        
+
         futures = []
         for idx, user in enumerate(users):
             if not os.path.exists(f"{self.save_path}/data/{user.name}"):
@@ -392,14 +394,14 @@ class CTFCreator:
             logger.debug(f"Deploy on host: {host.ip}")
 
             self.deploy_challenge(user, host)
-    
+
     def deploy_challenge(self, user: Participant, host: Host) -> str:
 
         logger.info("\u2500" * 120)
         logger.info(f"Create Challenge for {user.name}")
 
         running = self._check_running(user=user.name, host=host)
-        
+
         if not host.network_exists(user=user.name):
             host.create_network(user=user.name, subnet=user.subnet)
 
@@ -426,7 +428,14 @@ class CTFCreator:
                     container=container,
                     subnet=user.subnet,
                     index=random_ip,
-                    environment={"USER": user, "SECRET": self.config.get("secret"), "FLAG": gen_flag(secret=self.config.get("secret"), user=f"{user}_{container['name']}")},
+                    environment={
+                        "USER": user,
+                        "SECRET": self.config.get("secret"),
+                        "FLAG": gen_flag(
+                            secret=self.config.get("secret"),
+                            user=f"{user}_{container['name']}",
+                        ),
+                    },
                 )
 
         if self.kalibox and not "kali" in running:
@@ -435,8 +444,10 @@ class CTFCreator:
         logger.info("\u2500" * 120)
 
         return f"Done for User: {user.name}"
-    
-    def _create_openvpn_data(self, idx:int, user: Participant, used_ports: list, used_subnets: list):
+
+    def _create_openvpn_data(
+        self, idx: int, user: Participant, used_ports: list, used_subnets: list
+    ):
         logger.info(
             f"For the user: {user.name}, an OpenVPN configuration file will be generated!"
         )
@@ -521,7 +532,13 @@ class CTFCreator:
     show_default=True,
 )
 def main(config, save, prune, kali, recreate):
-    ctfcreator = CTFCreator(config=config.read(), save_path=save, prune=prune, kalibox=kali, recreate=recreate)
+    ctfcreator = CTFCreator(
+        config=config.read(),
+        save_path=save,
+        prune=prune,
+        kalibox=kali,
+        recreate=recreate,
+    )
     ctfcreator.create_challenge()
 
 
