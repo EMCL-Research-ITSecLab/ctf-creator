@@ -429,11 +429,11 @@ class CTFCreator:
                     subnet=user.subnet,
                     index=random_ip,
                     environment={
-                        "USER": user,
+                        "USER": user.name,
                         "SECRET": self.config.get("secret"),
                         "FLAG": gen_flag(
                             secret=self.config.get("secret"),
-                            user=f"{user}_{container['name']}",
+                            user=f"{user.name}_{container['name']}",
                         ),
                     },
                 )
