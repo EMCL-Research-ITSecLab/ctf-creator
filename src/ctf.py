@@ -387,7 +387,7 @@ class CTFCreator:
             logger.debug(f"Deploy on host: {host.ip}")
 
             self.deploy_challenge(user, host)
-    
+
     def deploy_challenge(self, user: Participant, host: Host) -> str:
 
         logger.info("\u2500" * 120)
@@ -514,7 +514,7 @@ class CTFCreator:
     "--recreate",
     default=False,
     is_flag=True,
-    help="Provides a Kali Docker container for network tracing.",
+    help="Restart OpenVPN Docker container. Restarts Kalibox also if --kali is set to true",
     show_default=True,
 )
 def main(config, save, prune, kali, recreate):
