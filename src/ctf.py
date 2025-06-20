@@ -528,7 +528,7 @@ class CTFCreator:
     "--recreate",
     default=False,
     is_flag=True,
-    help="Provides a Kali Docker container for network tracing.",
+    help="Restart OpenVPN Docker container. Restarts Kalibox also if --kali is set to true",
     show_default=True,
 )
 def main(config, save, prune, kali, recreate):

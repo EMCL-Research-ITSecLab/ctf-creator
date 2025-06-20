@@ -47,6 +47,9 @@ Options:
   --save PATH        The path where you want to save the user data for the
                      CTF-Creator. E.g. /home/debian/ctf-creator  [required]
   --prune            Prunes all running containers on the host machine.
+  --kali             Provides a Kali Docker container for network tracing.
+  --recreate         Restart OpenVPN Docker container. Restarts Kalibox also
+                     if --kali is set to true
   --help             Show this message and exit.
 ```
 
