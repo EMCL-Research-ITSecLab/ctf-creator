@@ -1,15 +1,10 @@
-<a id="readme-top"></a>
+# ⚠️ Deprecated
 
-<!-- PROJECT SHIELDS -->
-<div align="center">
+🚨 **This project is no longer maintained.**
+It is kept here for archival purposes only and may be outdated or insecure.
 
-[![Contributors][contributors-shield]][contributors-url]
-[![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
-[![Issues][issues-shield]][issues-url]
-[![EUPL License][license-shield]][license-url]
+👉 Please use [heiST](https://github.com/EMCL-Research-ITSecLab/ctf-challenger)
 
-</div>
 
 # CTF-Creator
 

@@ -26,13 +26,13 @@ secret: LqPbXZWFna2D4jmJXEyAj9pNDCpDJp7XTFYo
 
 # Usernames/ Uni-IDs
 users:
-  - stefan.machmeier@uni-heidelberg.de
+  - max.mustermann@test.de
 
 # For SSH Connection with user in Terminal
 # E.g. user@hostIPadress
 hosts:
-  - ip: 129.206.5.206
+  - ip: 1.1.1.1
     username: debian
-    identity_file: /Users/stefan/.ssh/hiscout
+    identity_file: /Users/mustermann/.ssh/...
 
 subnet: 10.14.0.0/24
