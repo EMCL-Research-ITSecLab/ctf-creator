@@ -89,7 +89,14 @@ class Docker:
         self._check_image_existence(image_name=image)
 
         endpoint_config = EndpointConfig(version="1.44", ipv4_address=host_address)
-        try:
+        
+	volumes = {
+        	"/var/log/commands.log": {'bind': '/var/log/commands.log', 'mode': 'rw'}
+        	#"/path/to/host/private_file": {"bind": "/wazuh-agent/commands.log", "mode": "rw"}
+    	}
+	environment["ENV_CONTAINER_NAME"] = container_name
+
+	try:
             container = self.client.containers.run(
                 image,
                 detach=True,
@@ -109,6 +116,8 @@ class Docker:
                 memswap_limit=0,
                 restart_policy={"name": "always"},
                 cpu_quota=500000,
+		volumes=volumes,
+		command="sh -c 'service rsyslog restart'",
             )
             return container
         except APIError as e:
